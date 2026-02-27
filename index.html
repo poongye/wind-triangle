@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.14.0 - 풍예 에디션</title>
+    <title>우주전쟁 v0.0.14.2 - 풍예 에디션</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
@@ -35,10 +35,10 @@
     <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
 
     <div id="rule-screen" class="overlay">
-        <h1>🌌 우주전쟁 v0.0.14.0</h1>
+        <h1>🌌 우주전쟁 v0.0.14.2</h1>
         <div class="rule-card">
-            <h2>⚖️ 공정한 전장 연합</h2>
-            <p>AI에게도 물리적 충돌 규칙이 엄격히 적용됩니다.</p>
+            <h2>☀️ 태양 에너지 보너스</h2>
+            <p>태양 근처에 기지를 건설하면 더 큰 점수를 얻습니다.<br>위험을 무릅쓰고 중심부를 장악하세요!</p>
             <button class="menu-btn" onclick="showGame()">전투 개시</button><br>
             <button class="menu-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="togglePatchNotes(true)">📋 패치 노트</button>
         </div>
@@ -46,12 +46,12 @@
 
     <div id="patch-notes">
         <h2 style="color:#00ffcc; border-bottom: 2px solid #00ffcc; padding-bottom: 10px;">📋 업데이트 기록</h2>
+        <div class="patch-ver">v0.0.14.2</div>
+        <div>- <b>태양 거리 보너스:</b> 중앙 태양에 가까울수록 최대 3배 점수 획득<br>- 점수 획득 시 배율 표시 이펙트 추가</div>
+        <div class="patch-ver">v0.0.14.1</div>
+        <div>- 오브젝트 겹침 방지: 모든 천체 간 최소 거리(80px) 확보</div>
         <div class="patch-ver">v0.0.14.0</div>
-        <div>- <b>AI 규칙 준수:</b> AI도 선 교차 및 별 통과 불가<br>- 전반적인 물리 판정 로직 최적화</div>
-        <div class="patch-ver">v0.0.13.9</div>
-        <div>- 선 교차 불가 규칙 복구 및 시스템 보존</div>
-        <div class="patch-ver">v0.0.13.8</div>
-        <div>- 패치 노트 메뉴 도입 및 하단 UI 최적화</div>
+        <div>- AI 규칙 준수: AI도 물리 충돌 및 통과 불가 규칙 적용</div>
         <button class="menu-btn" style="width:100%; margin-top:20px;" onclick="togglePatchNotes(false)">닫기</button>
     </div>
 
@@ -70,7 +70,7 @@
         <button class="ctrl-btn quit-btn" onclick="if(confirm('포기하시겠습니까?')) location.reload()">🏳️ 포기</button>
     </div>
 
-    <div id="ver-tag">v0.0.14.0 (PungYe Edition)</div>
+    <div id="ver-tag">v0.0.14.2 (PungYe Edition)</div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
@@ -100,16 +100,17 @@
         currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; skillGauge=0;
         points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
         for(let i=0; i<count-1; i++) {
-            let nx, ny, att = 0;
-            do { nx = Math.random()*(canvas.width-200)+100; ny = Math.random()*(canvas.height-200)+100; att++;
-            } while(points.some(p => Math.hypot(p.x-nx, p.y-ny) < 70) && att < 50);
+            let nx, ny, att = 0, overlap;
+            do {
+                overlap = false; nx = Math.random()*(canvas.width-240)+120; ny = Math.random()*(canvas.height-240)+120; att++;
+                if (points.some(p => Math.hypot(p.x - nx, p.y - ny) < 80)) overlap = true;
+            } while(overlap && att < 100);
             let r = Math.random();
             points.push({ x: nx, y: ny, isCore: false, isBomb: r < 0.08, isHeart: r > 0.94 });
         }
         updateUI(); drawLoop();
     }
 
-    // 선 교차 체크 함수
     function isIntersecting(p1, p2, p3, p4) {
         const cp = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
         const res1 = cp(p1, p2, p3) * cp(p1, p2, p4);
@@ -117,26 +118,25 @@
         return res1 < 0 && res2 < 0;
     }
 
-    // 통합 규칙 체크 함수 (플레이어와 AI 공용)
     function canConnect(p1, p2) {
         if (!p1 || !p2 || p1 === p2) return false;
-        // 1. 이미 연결된 선인지 확인
         if (lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
-        // 2. 다른 선과 교차하는지 확인
         if (lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return false;
-        // 3. 선이 다른 점(별)을 통과하는지 확인
         return !points.some(p => {
             if (p === p1 || p === p2) return false;
             let d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
             let d1 = Math.hypot(p.x - p1.x, p.y - p1.y);
             let d2 = Math.hypot(p.x - p2.x, p.y - p2.y);
-            return Math.abs(d - (d1 + d2)) < 0.5; // 거리가 거의 같으면 선 위에 점이 있는 것
+            return Math.abs(d - (d1 + d2)) < 0.5;
         });
     }
 
-    function attemptMove(p1, p2) {
-        if (!canConnect(p1, p2)) return; // 안전장치
+    function addEffect(x, y, text, color) {
+        effects.push({ x, y, text, color, alpha: 1.0 });
+    }
 
+    function attemptMove(p1, p2) {
+        if (!canConnect(p1, p2)) return;
         lines.push({p1, p2, player:currentPlayer});
         let found = false;
         points.forEach(p3 => {
@@ -145,8 +145,24 @@
             const l2 = lines.find(ln=>(ln.p1===p2&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p2));
             if(l1 && l2) {
                 if(!triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
+                    let cx = (p1.x + p2.x + p3.x) / 3;
+                    let cy = (p1.y + p2.y + p3.y) / 3;
+                    
+                    // 태양 보너스 계산
+                    const core = points.find(p => p.isCore);
+                    const distToSun = Math.hypot(cx - core.x, cy - core.y);
+                    const maxDist = Math.hypot(canvas.width, canvas.height) / 2;
+                    let sunMult = 1.0 + (1.0 - Math.min(distToSun / maxDist, 1.0)) * 2.0; // 태양에 가까울수록 최대 3배
+                    sunMult = Math.round(sunMult * 10) / 10;
+
                     triangles.push({p1,p2,p3,player:currentPlayer, anim:0, isCore:(p1.isCore||p2.isCore||p3.isCore)});
-                    scores[currentPlayer] += (p1.isCore||p2.isCore||p3.isCore) ? 30 : 10;
+                    
+                    let baseScore = (p1.isCore||p2.isCore||p3.isCore) ? 30 : 10;
+                    let finalAdd = Math.floor(baseScore * sunMult);
+                    scores[currentPlayer] += finalAdd;
+
+                    addEffect(cx, cy, `+${finalAdd} (x${sunMult})`, currentPlayer === 1 ? "#2ecc71" : "#e74c3c");
+
                     if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 25);
                     found = true;
                 }
@@ -160,18 +176,12 @@
     function aiMove() {
         if (currentPlayer !== 2) return;
         let moves = [];
-        // AI도 canConnect 함수를 통해 유효한 수만 탐색
         for (let i = 0; i < points.length; i++) {
             for (let j = i + 1; j < points.length; j++) {
-                if (canConnect(points[i], points[j])) {
-                    moves.push({ p1: points[i], p2: points[j] });
-                }
+                if (canConnect(points[i], points[j])) moves.push({ p1: points[i], p2: points[j] });
             }
         }
-        if (moves.length > 0) {
-            let target = moves[Math.floor(Math.random()*moves.length)];
-            attemptMove(target.p1, target.p2);
-        }
+        if (moves.length > 0) attemptMove(moves[Math.floor(Math.random()*moves.length)].p1, moves[Math.floor(Math.random()*moves.length)].p2);
     }
 
     function updateUI() {
@@ -185,6 +195,8 @@
 
     function drawLoop() {
         frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
+        
+        // 삼각형 그리기
         triangles.forEach(t => {
             ctx.save(); ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
             ctx.fillStyle = t.player===1 ? 'rgba(46,204,113,0.12)' : 'rgba(231,76,60,0.12)'; ctx.fill();
@@ -193,10 +205,14 @@
             ctx.translate((t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3); ctx.scale(t.anim, t.anim);
             ctx.font = "30px Arial"; ctx.textAlign="center"; ctx.fillText(t.player===1?"🛸":"🛰️", 0, 10); ctx.restore();
         });
+
+        // 선 그리기
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
             ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
+
+        // 별 그리기
         points.forEach(p => {
             ctx.save(); let s = (selectedPoint === p) ? 1.3 : 1.0;
             if(selectedPoint === p) ctx.filter = "invert(1) brightness(2)";
@@ -204,6 +220,16 @@
             ctx.font = p.isCore ? "45px Arial" : "30px Arial"; ctx.textAlign="center";
             ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), 0, 10); ctx.restore();
         });
+
+        // 이펙트 그리기
+        for(let i = effects.length - 1; i >= 0; i--) {
+            let e = effects[i];
+            ctx.save(); ctx.globalAlpha = e.alpha; ctx.fillStyle = e.color; ctx.font = "bold 18px Arial"; ctx.textAlign = "center";
+            ctx.fillText(e.text, e.x, e.y); ctx.restore();
+            e.y -= 1; e.alpha -= 0.02;
+            if(e.alpha <= 0) effects.splice(i, 1);
+        }
+
         requestAnimationFrame(drawLoop);
     }
 
