@@ -3,30 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>우주전쟁 v0.0.15.3</title>
+    <title>우주전쟁 v0.0.15.4</title>
     <style>
-        /* 1. 배경 및 캔버스 설정 */
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
+        
+        /* 게임 캔버스 (확대/축소 대상) */
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: manipulation; }
         
-        /* 2. 고정 UI (확대/축소 영향을 받지 않음) */
-        #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
+        /* 고정 UI 레이어 (확대/축소 영향을 받지 않음) */
+        #fixed-ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
         
-        .score-container { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
-        .score-box { pointer-events: auto; font-size: 18px; font-weight: bold; padding: 10px 15px; background: rgba(0,0,0,0.7); border-radius: 12px; border: 1px solid #ffffff33; color: white; }
+        .score-container { position: absolute; top: env(safe-area-inset-top, 20px); width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
+        .score-box { pointer-events: auto; font-size: clamp(14px, 4vw, 20px); font-weight: bold; padding: 8px 15px; background: rgba(0,0,0,0.75); border-radius: 12px; border: 1px solid #ffffff33; color: white; min-width: 80px; text-align: center; }
         
         #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; }
-        #skill-bar-bg { width: 120px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid #00ffcc; overflow: hidden; }
+        #skill-bar-bg { width: 100px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid #00ffcc; overflow: hidden; }
         #skill-bar { width: 0%; height: 100%; background: #00ffcc; transition: 0.3s; }
         
         button { background: none; border: none; color: white; cursor: pointer; font-weight: bold; font-size: 14px; }
+
+        /* 시작 설정 화면 */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.85); }
+        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 85%; max-width: 350px; text-align: center; }
         
-        /* 시작 화면 */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.8); }
-        .rule-card { background: rgba(10, 10, 20, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #3498db; max-width: 320px; text-align: center; }
-        .start-btn { padding: 15px; margin-top: 20px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 10px; cursor: pointer; width: 100%; }
-        
+        .setup-item { margin: 15px 0; text-align: left; }
+        .setup-item label { color: #00ffcc; font-size: 13px; font-weight: bold; display: block; margin-bottom: 5px; }
+        select, input[type="range"] { width: 100%; background: #111; color: white; border: 1px solid #3498db; padding: 8px; border-radius: 5px; }
+
+        .start-btn { padding: 15px; margin-top: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 10px; cursor: pointer; width: 100%; }
         #ver-tag { position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: #00ffcc88; z-index: 100; }
     </style>
 </head>
@@ -37,22 +42,31 @@
 
     <div id="rule-screen" class="overlay">
         <div class="rule-card">
-            <h2 style="color:#3498db; margin:0;">🌌 우주전쟁 v0.0.15.3</h2>
-            <p style="color:#00ffcc; font-size:14px;">바람의 후예(풍예) 에디션</p>
-            <button class="start-btn" onclick="showGame()">전투 개시</button>
-            <div style="font-size:11px; color:#aaa; margin-top:15px; text-align:left; line-height:1.6;">
-                🚫 <b>선 교차 통과 불가</b> 정밀 체크<br>
-                📱 <b>터치 영역 강화:</b> 손가락 조작 최적화<br>
-                📍 <b>UI 고정:</b> 확대 시에도 버튼 유지<br>
-                💡 <b>화면 밝기:</b> 배경 어두워짐 방지 적용
+            <h2 style="color:#3498db; margin:0 0 10px 0;">🌌 우주전쟁 v0.0.15.4</h2>
+            <p style="color:#00ffcc; font-size:12px; margin-bottom:20px;">바람의 후예(풍예) 커스텀</p>
+            
+            <div class="setup-item">
+                <label>🤖 제국군 지능</label>
+                <select id="ai-diff">
+                    <option value="1000">보통 (Normal)</option>
+                    <option value="500">어려움 (Hard)</option>
+                </select>
             </div>
+
+            <div class="setup-item">
+                <label>✨ 은하수 별 개수</label>
+                <input type="range" id="star-count" min="15" max="30" value="20" oninput="updateStarVal(this.value)">
+                <div id="star-val" style="text-align:right; font-size:11px; color:#aaa;">20개</div>
+            </div>
+
+            <button class="start-btn" onclick="showGame()">전투 시작</button>
         </div>
     </div>
 
-    <div id="ui-layer">
+    <div id="fixed-ui-layer">
         <div class="score-container">
             <div class="score-box" style="color:#2ecc71;">연맹: <span id="s1">0</span></div>
-            <div id="mid-msg" style="color:#00ffcc; font-weight:bold; text-shadow: 0 0 5px #000;"></div>
+            <div id="mid-msg" style="color:#00ffcc; font-weight:bold; font-size:16px; text-shadow: 1px 1px 3px #000;"></div>
             <div class="score-box" style="color:#e74c3c;">제국: <span id="s2">0</span></div>
         </div>
 
@@ -63,14 +77,16 @@
         </div>
     </div>
 
-    <div id="ver-tag">v0.0.15.3 PungYe UI-Fix</div>
+    <div id="ver-tag">v0.0.15.4 Fixed UI & Setup</div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
-    let skillGauge=0, bgm = document.getElementById('bgm'), isBGMPlaying = false;
+    let skillGauge=0, bgm = document.getElementById('bgm'), isBGMPlaying = false, aiDelay = 1000;
+
+    function updateStarVal(v) { document.getElementById('star-val').innerText = v + "개"; }
 
     function resize() { 
         canvas.width = window.innerWidth; 
@@ -84,26 +100,29 @@
     }
 
     function showGame() {
+        aiDelay = parseInt(document.getElementById('ai-diff').value);
+        const count = parseInt(document.getElementById('star-count').value);
         document.getElementById('rule-screen').style.display='none';
         document.getElementById('bottom-ctrl').style.display='flex';
-        startGame(20);
+        startGame(count);
     }
 
     function startGame(count) {
         points = []; lines = []; triangles = []; scores = {1:0, 2:0}; currentPlayer = 1;
         points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
-        for(let i=0; i<count; i++) {
+        for(let i=0; i<count-1; i++) {
             let nx, ny, ok;
             do {
-                nx = 50 + Math.random() * (canvas.width - 100);
-                ny = 80 + Math.random() * (canvas.height - 160);
-                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 110);
+                nx = 60 + Math.random() * (canvas.width - 120);
+                ny = 100 + Math.random() * (canvas.height - 200);
+                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 120);
             } while(!ok);
             points.push({ x: nx, y: ny, isCore: false });
         }
         updateUI(); drawLoop();
     }
 
+    // 선 교차 판정 (규칙 엄수)
     function isIntersecting(p1, p2, p3, p4) {
         const cp = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
         const d1 = cp(p1, p2, p3), d2 = cp(p1, p2, p4), d3 = cp(p3, p4, p1), d4 = cp(p3, p4, p2);
@@ -117,7 +136,7 @@
         return !points.some(p => {
             if (p === p1 || p === p2) return false;
             let d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
-            return Math.abs(d - (Math.hypot(p.x - p1.x, p.y - p1.y) + Math.hypot(p.x - p2.x, p.y - p2.y))) < 0.2;
+            return Math.abs(d - (Math.hypot(p.x - p1.x, p.y - p1.y) + Math.hypot(p.x - p2.x, p.y - p2.y))) < 0.25;
         });
     }
 
@@ -138,7 +157,7 @@
         });
         if(!found) currentPlayer = (currentPlayer === 1) ? 2 : 1;
         updateUI();
-        if(currentPlayer === 2) setTimeout(aiPlay, 800);
+        if(currentPlayer === 2) setTimeout(aiPlay, aiDelay);
     }
 
     function aiPlay() {
@@ -157,7 +176,7 @@
         document.getElementById('s1').innerText = scores[1];
         document.getElementById('s2').innerText = scores[2];
         document.getElementById('skill-bar').style.width = skillGauge + "%";
-        document.getElementById('mid-msg').innerText = currentPlayer === 1 ? "연맹군 턴" : "제국군 턴";
+        document.getElementById('mid-msg').innerText = currentPlayer === 1 ? "연맹군(풍예) 차례" : "제국군 차례";
     }
 
     function drawLoop() {
@@ -170,13 +189,12 @@
             ctx.fill();
             ctx.strokeStyle = t.player === 1 ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)';
             ctx.stroke();
-            ctx.font = "16px Arial"; ctx.fillText(t.player === 1 ? "🛸" : "🛰️", (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3 + 5);
         });
         ctx.restore();
 
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
-            ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2.5; ctx.stroke();
         });
 
         points.forEach(p => {
@@ -192,7 +210,6 @@
         requestAnimationFrame(drawLoop);
     }
 
-    // ⭐ 터치 및 클릭 입력 (감도 65px로 상향)
     const handleInput = (x, y, isRight) => {
         if(currentPlayer !== 1) return;
         if(isRight) { selectedPoint = null; return; }
@@ -206,10 +223,7 @@
     canvas.addEventListener('mousedown', e => handleInput(e.clientX, e.clientY, e.button === 2));
     canvas.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('touchstart', e => {
-        if(e.touches.length === 1) {
-            const touch = e.touches[0];
-            handleInput(touch.clientX, touch.clientY, false);
-        }
+        if(e.touches.length === 1) handleInput(e.touches[0].clientX, e.touches[0].clientY, false);
     });
 </script>
 </body>
