@@ -3,28 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>우주전쟁 v0.0.15.1</title>
+    <title>우주전쟁 v0.0.15.2</title>
     <style>
         body { margin: 0; overflow: auto; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; }
-        /* 배경 이미지가 항상 화면을 꽉 채우도록 설정 */
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
         
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.7); }
-        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #3498db; max-width: 90%; }
+        /* UI 요소 고정 */
+        #ingame-ui { position: fixed; top: 20px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; }
+        .score-box { font-size: 22px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.7); border-radius: 15px; border: 1px solid #ffffff33; }
         
-        .setup-group { margin: 15px 0; text-align: left; }
-        select, input { width: 100%; padding: 10px; border-radius: 6px; background: #111; color: white; border: 1px solid #3498db; margin-top: 5px; }
-
-        .menu-btn { padding: 15px; margin-top: 20px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; }
-        
-        #ingame-ui { position: fixed; top: 20px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 20px; box-sizing: border-box; pointer-events: none; }
-        .score-box { font-size: 18px; font-weight: bold; padding: 8px 15px; background: rgba(0,0,0,0.6); border-radius: 10px; border: 1px solid #fff2; }
-        
-        #bottom-ctrl { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; align-items: center; gap: 15px; background: rgba(0,0,0,0.8); padding: 10px 20px; border-radius: 50px; border: 1px solid #00ffcc; }
-        #skill-bar-bg { width: 120px; height: 8px; background: #ffffff11; border-radius: 4px; border: 1px solid #00ffcc; overflow: hidden; }
+        #bottom-ctrl { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; align-items: center; gap: 20px; background: rgba(0,0,0,0.85); padding: 12px 25px; border-radius: 50px; border: 1px solid #00ffcc; }
+        #skill-bar-bg { width: 150px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid #00ffcc; overflow: hidden; }
         #skill-bar { width: 0%; height: 100%; background: #00ffcc; transition: 0.3s; }
-        #ver-tag { position: fixed; bottom: 5px; right: 10px; font-size: 10px; color: #00ffcc88; z-index: 200; }
+        
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.8); }
+        .rule-card { background: rgba(10, 10, 20, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #3498db; max-width: 400px; }
+        .menu-btn { padding: 15px; margin-top: 20px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 10px; cursor: pointer; width: 100%; }
+        #ver-tag { position: fixed; bottom: 10px; right: 20px; font-size: 12px; color: #00ffcc88; z-index: 200; }
     </style>
 </head>
 <body>
@@ -34,59 +30,39 @@
 
     <div id="rule-screen" class="overlay">
         <div class="rule-card">
-            <h1 style="color:#3498db; font-size: 24px;">🌌 우주전쟁 v0.0.15.1</h1>
-            <p style="color:#00ffcc; font-size:12px;">바람의 후예(풍예) 에디션</p>
-            
-            <div class="setup-group">
-                <label>🤖 AI 난이도</label>
-                <select id="ai-diff"><option value="1000">보통</option><option value="500">어려움</option></select>
-            </div>
-            
+            <h1 style="color:#3498db; margin:0;">🌌 우주전쟁 v0.0.15.2</h1>
+            <p style="color:#00ffcc; font-size:14px;">풍예(바람의 후예) 에디션</p>
             <button class="menu-btn" onclick="showGame()">전투 개시</button>
-            <div style="font-size:11px; color:#aaa; margin-top:15px; text-align:left; line-height:1.4;">
-                📱 <b>두 손가락:</b> 화면 확대/축소 가능<br>
-                💡 <b>화면 밝기:</b> 삼각형 생성 시 어두워짐 해결<br>
-                🖱️ <b>우클릭/롱탭:</b> 선택 취소
+            <div style="font-size:11px; color:#aaa; margin-top:20px; text-align:left; line-height:1.6;">
+                🚫 <b>규칙 엄수:</b> 선 교차 통과 절대 불가<br>
+                💡 <b>화면 밝기:</b> 삼각형 중첩 어두워짐 차단<br>
+                🖱️ <b>우클릭/롱탭:</b> 선택 취소 가능<br>
+                📱 <b>두 손가락:</b> 핀치 줌(확대/축소) 지원
             </div>
         </div>
     </div>
 
     <div id="ingame-ui">
         <div class="score-box" style="color:#2ecc71;">연맹: <span id="s1">0</span></div>
-        <div id="mid-msg" style="font-size:18px; font-weight:bold;"></div>
+        <div id="mid-msg" style="font-size:22px; font-weight:bold; color:#00ffcc;"></div>
         <div class="score-box" style="color:#e74c3c;">제국: <span id="s2">0</span></div>
     </div>
 
     <div id="bottom-ctrl">
-        <button id="bgm-btn" onclick="toggleBGM()" style="background:none; border:none; color:white; font-size:12px;">🎵 BGM</button>
+        <button id="bgm-btn" onclick="toggleBGM()" style="background:none; border:none; color:white; cursor:pointer;">🎵 BGM</button>
         <div id="skill-bar-bg"><div id="skill-bar"></div></div>
-        <button onclick="location.reload()" style="background:none; border:1px solid #e74c3c; color:#e74c3c; border-radius:8px; font-size:10px;">🏳️ 종료</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #e74c3c; color:#e74c3c; border-radius:10px; padding:5px 12px; cursor:pointer; font-size:12px;">🏳️ 종료</button>
     </div>
 
-    <div id="ver-tag">v0.0.15.1 PungYe Mobile Fix</div>
+    <div id="ver-tag">v0.0.15.2 PungYe Master Fix</div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
-    let skillGauge=0, effects=[], bgm = document.getElementById('bgm'), isBGMPlaying = false;
-    let aiDelay = 1000;
+    let skillGauge=0, bgm = document.getElementById('bgm'), isBGMPlaying = false;
 
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    function playSound(freq, type, duration, vol=0.1) {
-        if (!isBGMPlaying) return;
-        try {
-            const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
-            osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-            gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + duration);
-        } catch(e) {}
-    }
-
-    // 화면 크기 조정 (캔버스는 기본적으로 해상도 유지)
     function resize() { 
         canvas.width = Math.max(window.innerWidth, 1200); 
         canvas.height = Math.max(window.innerHeight, 800); 
@@ -94,43 +70,61 @@
     window.addEventListener('resize', resize); resize();
 
     function toggleBGM() {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
         if (!isBGMPlaying) { bgm.play().catch(()=>{}); isBGMPlaying = true; document.getElementById('bgm-btn').style.color = "#00ffcc"; }
         else { bgm.pause(); isBGMPlaying = false; document.getElementById('bgm-btn').style.color = "white"; }
     }
 
     function showGame() {
-        aiDelay = parseInt(document.getElementById('ai-diff').value);
         document.getElementById('rule-screen').style.display='none';
         document.getElementById('ingame-ui').style.display='flex';
         document.getElementById('bottom-ctrl').style.display='flex';
-        if(!isBGMPlaying) toggleBGM();
         startGame(22);
     }
 
     function startGame(count) {
-        points = []; lines = []; triangles = []; scores = {1:0, 2:0}; skillGauge = 0; currentPlayer = 1;
+        points = []; lines = []; triangles = []; scores = {1:0, 2:0}; currentPlayer = 1;
         points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
         for(let i=0; i<count; i++) {
-            let nx, ny, tooClose;
+            let nx, ny, ok;
             do {
-                nx = 100 + Math.random() * (canvas.width - 200);
-                ny = 100 + Math.random() * (canvas.height - 200);
-                tooClose = points.some(p => Math.hypot(p.x - nx, p.y - ny) < 130);
-            } while(tooClose);
+                nx = 150 + Math.random() * (canvas.width - 300);
+                ny = 150 + Math.random() * (canvas.height - 300);
+                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 130);
+            } while(!ok);
             points.push({ x: nx, y: ny, isCore: false });
         }
         updateUI(); drawLoop();
     }
 
+    // ⭐ 선 교차 판정 알고리즘 (통과 불가 핵심 로직)
+    function isIntersecting(p1, p2, p3, p4) {
+        const crossProduct = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+        const d1 = crossProduct(p1, p2, p3);
+        const d2 = crossProduct(p1, p2, p4);
+        const d3 = crossProduct(p3, p4, p1);
+        const d4 = crossProduct(p3, p4, p2);
+        if (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0))) return true;
+        return false;
+    }
+
     function canConnect(p1, p2) {
         if (!p1 || !p2 || p1 === p2) return false;
+        // 1. 이미 존재하는 선인지 확인
         if (lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
-        // 교차 검사 및 별 통과 검사는 v0.0.15.0과 동일 (생략 생략 로직)
-        return true; 
+        // 2. 다른 선과 교차하는지 확인 (핵심 복구)
+        if (lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return false;
+        // 3. 선이 다른 별을 직접 통과하는지 확인
+        return !points.some(p => {
+            if (p === p1 || p === p2) return false;
+            let d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            let d1 = Math.hypot(p.x - p1.x, p.y - p1.y);
+            let d2 = Math.hypot(p.x - p2.x, p.y - p2.y);
+            return Math.abs(d - (d1 + d2)) < 0.2;
+        });
     }
 
     function attemptMove(p1, p2) {
+        if (!canConnect(p1, p2)) return;
         lines.push({p1, p2, player: currentPlayer});
         let found = false;
         points.forEach(p3 => {
@@ -139,93 +133,89 @@
             const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
             if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
                 triangles.push({p1, p2, p3, player: currentPlayer});
-                scores[currentPlayer] += 15;
-                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 30);
+                scores[currentPlayer] += 20;
+                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 34);
                 found = true;
             }
         });
         if(!found) currentPlayer = (currentPlayer === 1) ? 2 : 1;
         updateUI();
-        if(currentPlayer === 2) setTimeout(aiPlay, aiDelay);
+        if(currentPlayer === 2) setTimeout(aiPlay, 800);
     }
 
     function aiPlay() {
         if(currentPlayer !== 2) return;
-        let p1 = points[Math.floor(Math.random()*points.length)];
-        let p2 = points[Math.floor(Math.random()*points.length)];
-        if(p1 !== p2) attemptMove(p1, p2);
-        else aiPlay();
+        let possible = [];
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) {
+                if(canConnect(points[i], points[j])) possible.push([points[i], points[j]]);
+            }
+        }
+        if(possible.length > 0) {
+            let move = possible[Math.floor(Math.random()*possible.length)];
+            attemptMove(move[0], move[1]);
+        } else { currentPlayer = 1; updateUI(); }
     }
-
-    window.addEventListener('contextmenu', e => {
-        e.preventDefault();
-        selectedPoint = null;
-    });
 
     function updateUI() {
         document.getElementById('s1').innerText = scores[1];
         document.getElementById('s2').innerText = scores[2];
         document.getElementById('skill-bar').style.width = skillGauge + "%";
-        document.getElementById('mid-msg').innerText = currentPlayer === 1 ? "연맹군 차례" : "제국군 차례";
+        document.getElementById('mid-msg').innerText = currentPlayer === 1 ? "연맹군(풍예) 차례" : "제국군(AI) 차례";
     }
 
     function drawLoop() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
         
-        // [중요] 삼각형 그리기 모드 변경 - 어두워짐 해결
+        // 삼각형 그리기 (lighter 모드로 어두워짐 완벽 차단)
         ctx.save();
-        ctx.globalCompositeOperation = 'lighter'; // 겹칠수록 밝아짐 (어두워짐 방지)
+        ctx.globalCompositeOperation = 'lighter';
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player === 1 ? 'rgba(46,204,113,0.15)' : 'rgba(231,76,60,0.15)'; 
+            ctx.fillStyle = t.player === 1 ? 'rgba(46,204,113,0.05)' : 'rgba(231,76,60,0.05)';
             ctx.fill();
-            ctx.strokeStyle = t.player === 1 ? 'rgba(46,204,113,0.3)' : 'rgba(231,76,60,0.3)';
+            ctx.strokeStyle = t.player === 1 ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)';
             ctx.stroke();
+            ctx.font = "20px Arial"; ctx.fillText(t.player === 1 ? "🛸" : "🛰️", (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3 + 7);
         });
         ctx.restore();
 
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
-            ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2.5; ctx.stroke();
         });
 
         points.forEach(p => {
             ctx.save();
             if(selectedPoint === p) {
                 ctx.shadowBlur = 15; ctx.shadowColor = "#fff";
-                ctx.scale(1.2, 1.2); ctx.filter = "invert(1)";
+                ctx.scale(1.3, 1.3); ctx.filter = "invert(1)";
             }
-            ctx.font = p.isCore ? "40px Arial" : "30px Arial"; ctx.textAlign = "center";
-            ctx.fillText(p.isCore ? "☀️" : "✨", selectedPoint === p ? p.x/1.2 : p.x, (selectedPoint === p ? p.y/1.2 : p.y) + 10);
+            ctx.font = p.isCore ? "45px Arial" : "32px Arial"; ctx.textAlign = "center";
+            ctx.fillText(p.isCore ? "☀️" : "✨", selectedPoint === p ? p.x/1.3 : p.x, (selectedPoint === p ? p.y/1.3 : p.y) + 12);
             ctx.restore();
         });
         requestAnimationFrame(drawLoop);
     }
 
-    canvas.addEventListener('mousedown', e => {
-        if(currentPlayer !== 1 || e.button !== 0) return;
+    // 클릭 및 터치 (선택 취소 포함)
+    const handleInput = (clientX, clientY, isRight) => {
+        if(currentPlayer !== 1) return;
+        if(isRight) { selectedPoint = null; return; }
         const rect = canvas.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 40);
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 45);
         if(p) {
             if(!selectedPoint) selectedPoint = p;
             else { attemptMove(selectedPoint, p); selectedPoint = null; }
-        }
-    });
+        } else selectedPoint = null;
+    };
 
-    // 터치 지원 (모바일 클릭)
+    canvas.addEventListener('mousedown', e => handleInput(e.clientX, e.clientY, e.button === 2));
+    canvas.addEventListener('contextmenu', e => e.preventDefault());
     canvas.addEventListener('touchstart', e => {
-        if(e.touches.length > 1) return; // 멀티터치는 줌을 위해 양보
-        const touch = e.touches[0];
-        const rect = canvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 50);
-        if(p) {
-            if(!selectedPoint) selectedPoint = p;
-            else { attemptMove(selectedPoint, p); selectedPoint = null; }
-        }
+        if(e.touches.length === 1) handleInput(e.touches[0].clientX, e.touches[0].clientY, false);
     });
 </script>
 </body>
