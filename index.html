@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>바람의 삼각형 - poongye Edition</title>
+    <title>바람의 삼각형 - poongye v0.0.1</title>
     <style>
         body { margin: 0; overflow: hidden; background: #0b0e14; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
-        canvas { display: block; background: #0b0e14; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(11, 14, 20, 0.95); z-index: 100; text-align: center; padding: 20px; box-sizing: border-box; }
-        .rule-card { background: rgba(44, 62, 80, 0.8); padding: 20px; border-radius: 20px; border: 2px solid #f1c40f; max-width: 400px; line-height: 1.6; }
+        .rule-card { background: rgba(44, 62, 80, 0.8); padding: 20px; border-radius: 20px; border: 2px solid #f1c40f; max-width: 400px; line-height: 1.6; pointer-events: auto; position: relative; }
         .rule-list { text-align: left; display: inline-block; margin: 15px 0; font-size: 15px; color: #ecf0f1; }
         h1 { font-size: 32px; color: #f1c40f; text-shadow: 0 0 20px #f1c40f; margin-bottom: 20px; }
-        .menu-btn { padding: 15px; margin: 8px; font-size: 18px; font-weight: bold; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 50px; cursor: pointer; transition: 0.2s; width: 80%; max-width: 300px; }
+        .menu-btn { padding: 15px; margin: 8px; font-size: 18px; font-weight: bold; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 50px; cursor: pointer; transition: 0.2s; width: 80%; max-width: 300px; pointer-events: auto; }
         .menu-btn:hover { background: #2ecc71; color: white; }
+        
+        /* 버전 표시 스타일 */
+        .version-tag { position: absolute; bottom: 10px; right: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.4); font-family: monospace; }
+
         .btn-normal { border-color: #3498db; color: #3498db; } 
         .btn-hard { border-color: #e74c3c; color: #e74c3c; } 
         .btn-count { border-color: #f1c40f; color: #f1c40f; }
-        #ingame-ui { position: absolute; top: 0; left: 0; width: 100%; pointer-events: none; display: none; justify-content: space-between; padding: 15px; box-sizing: border-box; z-index: 50; }
-        .score-box { font-size: 18px; font-weight: bold; transition: 0.2s; }
+        #ingame-ui { position: absolute; top: 20px; left: 0; width: 100%; pointer-events: none; display: none; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 50; }
+        .score-box { font-size: 18px; font-weight: bold; }
         .p1-ui { color: #2ecc71; } .p2-ui { color: #e74c3c; }
         .turn-box { font-size: 30px; font-weight: 900; padding: 15px; border-radius: 10px; border: 2px solid transparent; }
         .active-turn { background: white; color: black; box-shadow: 0 0 15px white; }
@@ -35,8 +39,8 @@
                 <li>📍 두 점을 연결하여 <b>선</b>을 긋습니다.</li>
                 <li>🚫 선은 다른 선이나 점을 통과할 수 없습니다.</li>
                 <li>📐 삼각형을 만들면 <b>1점</b> 획득 후 <b>추가 턴!</b></li>
-                <li>🏁 선을 더 못 그으면 점수 높은 쪽 승리!</li>
             </ul>
+            <div class="version-tag">v0.0.1</div>
         </div>
         <button class="menu-btn" onclick="showDifficulty()">게임 시작하기</button>
     </div>
@@ -64,13 +68,13 @@
     </div>
 
     <div id="ingame-ui">
-        <div id="p1-score-ui" class="score-box p1-ui">USER: <span id="s1">0</span></div>
+        <div class="score-box p1-ui">USER: <span id="s1">0</span></div>
         <div id="mid-msg" style="text-align: center;"></div>
-        <div id="p2-score-ui" class="score-box p2-ui">AI: <span id="s2">0</span></div>
+        <div class="score-box p2-ui">AI: <span id="s2">0</span></div>
     </div>
 
     <div id="game-over-screen" class="overlay" style="display:none;">
-        <h1 id="over-title" style="color: #f1c40f;">GAME OVER</h1>
+        <h1 style="color: #f1c40f;">GAME OVER</h1>
         <div id="winner-msg" style="font-size: 20px; margin-bottom: 20px;"></div>
         <button class="menu-btn" onclick="location.reload()">다시 하기</button>
     </div>
@@ -87,10 +91,14 @@
         if (audioCtx.state === 'suspended') audioCtx.resume();
     }
 
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    function resize() { 
+        canvas.width = window.innerWidth; 
+        canvas.height = window.innerHeight; 
+        ctx.fillStyle = "#0b0e14"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
     window.addEventListener('resize', resize); resize();
 
-    let points = [], lines = [], triangles = [], selectedPoint = null, currentPlayer = 0, scores = {1:0, 2:0}, isGameOver = false, aiLevel, pointCount;
+    let points = [], lines = [], triangles = [], selectedPoint = null, currentPlayer = 0, scores = {1:0, 2:0}, isGameOver = false, aiLevel;
     let mousePos = { x: 0, y: 0 }, aiAnimating = false, aiStartPoint, aiEndPoint, aiAnimProgress = 0;
 
     function showDifficulty() {
@@ -100,19 +108,17 @@
     }
 
     function selectDifficulty(l) { 
-        aiLevel = l; 
-        try { document.getElementById('bgm').play(); } catch(e) {}
+        aiLevel = l; try { document.getElementById('bgm').play(); } catch(e) {}
         document.getElementById('difficulty-screen').style.display = 'none'; 
         document.getElementById('count-screen').style.display = 'flex'; 
     }
 
     function selectPointCount(c) { 
-        pointCount = c; 
         document.getElementById('count-screen').style.display = 'none'; 
-        decideTurn(); 
+        decideTurn(c); 
     }
 
-    function decideTurn() {
+    function decideTurn(pointCount) {
         document.getElementById('turn-decide-screen').style.display = 'flex';
         let count = 0, currentSlot = 1;
         const interval = setInterval(() => {
@@ -125,54 +131,39 @@
                 document.getElementById('slot-p1').classList.toggle('active-turn', currentPlayer === 1);
                 document.getElementById('slot-p2').classList.toggle('active-turn', currentPlayer === 2);
                 document.getElementById('turn-title').innerText = (currentPlayer === 1 ? "USER" : "AI") + " 선공!";
-                setTimeout(startGame, 1200);
+                setTimeout(() => startGame(pointCount), 1000);
             }
-        }, 100);
+        }, 80);
     }
 
-    function startGame() {
+    function startGame(count) {
         document.getElementById('turn-decide-screen').style.display = 'none';
         document.getElementById('ingame-ui').style.display = 'flex';
         points = []; lines = []; triangles = []; scores = { 1: 0, 2: 0 }; isGameOver = false;
-        
-        const margin = 80;
-        for (let i = 0; i < pointCount; i++) {
+        const margin = 100;
+        for (let i = 0; i < count; i++) {
             points.push({ 
                 x: Math.random() * (canvas.width - margin * 2) + margin, 
                 y: Math.random() * (canvas.height - margin * 2) + margin 
             });
         }
         updateUI();
-        requestAnimationFrame(drawLoop); // 루프 강제 시작
-        if (currentPlayer === 2) setTimeout(aiMove, 800);
+        drawLoop();
+        if (currentPlayer === 2) setTimeout(aiMove, 600);
     }
-
-    // --- 헬퍼 함수 ---
-    function playTone(f, t, d) {
-        if (!audioCtx) return;
-        try {
-            const o = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            o.type = t; o.frequency.setValueAtTime(f, audioCtx.currentTime);
-            g.gain.setValueAtTime(0.05, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + d);
-            o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime + d);
-        } catch(e) {}
-    }
-    const soundSuccess = () => playTone(600, 'sine', 0.1);
-    const soundFail = () => playTone(150, 'sawtooth', 0.2);
-    const soundScoreAction = () => { playTone(880, 'sine', 0.1); setTimeout(() => playTone(1320, 'sine', 0.15), 50); };
 
     function handleInput(clientX, clientY) {
         if (currentPlayer !== 1 || isGameOver || aiAnimating || points.length === 0) return;
-        const p = points.find(pt => Math.hypot(pt.x - clientX, pt.y - clientY) < 30);
-        if (p && !selectedPoint) { selectedPoint = p; soundSuccess(); } 
+        const p = points.find(pt => Math.hypot(pt.x - clientX, pt.y - clientY) < 35);
+        if (p && !selectedPoint) { selectedPoint = p; } 
         else if (p && selectedPoint !== p) {
-            if (!canConnect(selectedPoint, p)) { soundFail(); selectedPoint = null; } 
-            else { attemptMove(selectedPoint, p); selectedPoint = null; }
+            if (canConnect(selectedPoint, p)) { attemptMove(selectedPoint, p); selectedPoint = null; } 
+            else { selectedPoint = null; }
         } else { selectedPoint = null; }
     }
 
     canvas.addEventListener('mousedown', (e) => handleInput(e.clientX, e.clientY));
-    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleInput(e.touches[0].clientX, e.touches[0].clientY); }, { passive: false });
+    canvas.addEventListener('touchstart', (e) => { handleInput(e.touches[0].clientX, e.touches[0].clientY); }, { passive: true });
     window.addEventListener('mousemove', (e) => { mousePos.x = e.clientX; mousePos.y = e.clientY; });
 
     function canConnect(p1, p2) {
@@ -202,11 +193,11 @@
         lines.push({ p1, p2, player: currentPlayer });
         const bonus = checkTriangle(lines[lines.length-1]);
         if (bonus > 0) {
-            scores[currentPlayer] += bonus; soundScoreAction(); 
-            updateUI(); if (!checkGameOver() && currentPlayer === 2) setTimeout(aiMove, 600);
+            scores[currentPlayer] += bonus; updateUI(); 
+            if (!checkGameOver() && currentPlayer === 2) setTimeout(aiMove, 600);
         } else {
-            soundSuccess(); currentPlayer = currentPlayer === 1 ? 2 : 1;
-            updateUI(); if (currentPlayer === 2) setTimeout(aiMove, 1000);
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateUI(); if (currentPlayer === 2) setTimeout(aiMove, 800);
         }
     }
 
@@ -261,8 +252,7 @@
         let possible = force ? false : points.some((p1, i) => points.slice(i+1).some(p2 => canConnect(p1, p2)));
         if (!possible) {
             isGameOver = true;
-            const res = scores[1] > scores[2] ? "플레이어 승리! 🎉" : (scores[1] === scores[2] ? "무승부! 🤝" : "AI 승리.. 🤖");
-            document.getElementById('winner-msg').innerText = res;
+            document.getElementById('winner-msg').innerText = scores[1] > scores[2] ? "플레이어 승리!" : "AI 승리!";
             document.getElementById('game-over-screen').style.display = 'flex';
             return true;
         }
@@ -270,12 +260,13 @@
     }
 
     function drawLoop() {
+        if (isGameOver) return;
         ctx.fillStyle = "#0b0e14"; ctx.fillRect(0, 0, canvas.width, canvas.height);
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.25)' : 'rgba(231, 76, 60, 0.25)'; ctx.fill();
+            ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)'; ctx.fill();
         });
-        if (selectedPoint && !isGameOver) {
+        if (selectedPoint && !aiAnimating) {
             ctx.beginPath(); ctx.moveTo(selectedPoint.x, selectedPoint.y); ctx.lineTo(mousePos.x, mousePos.y);
             ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
         }
@@ -284,7 +275,7 @@
             const curY = aiStartPoint.y + (aiEndPoint.y - aiStartPoint.y) * aiAnimProgress;
             ctx.beginPath(); ctx.moveTo(aiStartPoint.x, aiStartPoint.y); ctx.lineTo(curX, curY);
             ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 3; ctx.stroke();
-            aiAnimProgress += 0.04; if (aiAnimProgress >= 1) { aiAnimating = false; attemptMove(aiStartPoint, aiEndPoint); }
+            aiAnimProgress += 0.05; if (aiAnimProgress >= 1) { aiAnimating = false; attemptMove(aiStartPoint, aiEndPoint); }
         }
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
@@ -295,7 +286,7 @@
             ctx.fillStyle = (selectedPoint === p) ? '#fff' : '#2c3e50'; ctx.fill();
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
         });
-        if (!isGameOver) requestAnimationFrame(drawLoop);
+        requestAnimationFrame(drawLoop);
     }
 </script>
 </body>
