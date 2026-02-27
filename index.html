@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>바람의 삼각형 - poongye v0.0.2</title>
+    <title>바람의 삼각형 - poongye v0.0.3</title>
     <style>
         body { margin: 0; overflow: hidden; background: #0b0e14; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -33,9 +33,9 @@
             <ul class="rule-list">
                 <li>📍 두 점을 연결하여 <b>선</b>을 긋습니다.</li>
                 <li>🚫 선은 다른 선이나 점을 통과할 수 없습니다.</li>
-                <li>📐 삼각형을 만들면 <b>1점</b> 획득 후 <b>추가 턴!</b></li>
+                <li>📐 삼각형을 만들면 <b>10점</b> 획득 후 <b>추가 턴!</b></li>
             </ul>
-            <div class="version-tag">v0.0.2</div>
+            <div class="version-tag">v0.0.3</div>
         </div>
         <button class="menu-btn" onclick="showDifficulty()">게임 시작하기</button>
     </div>
@@ -94,8 +94,6 @@
 
     let points = [], lines = [], triangles = [], selectedPoint = null, currentPlayer = 0, scores = {1:0, 2:0}, isGameOver = false, aiLevel;
     let mousePos = { x: 0, y: 0 }, aiAnimating = false, aiStartPoint, aiEndPoint, aiAnimProgress = 0;
-    
-    // 이펙트 관리용 배열
     let scoreEffects = [];
 
     function showDifficulty() {
@@ -188,16 +186,16 @@
             x: canvas.width / 2,
             y: canvas.height / 2,
             opacity: 1,
-            life: 60 // 약 1초 동안 유지
+            life: 60
         });
     }
 
     function attemptMove(p1, p2) {
         lines.push({ p1, p2, player: currentPlayer });
-        const bonus = checkTriangle(lines[lines.length-1]);
-        if (bonus > 0) {
-            scores[currentPlayer] += bonus;
-            addScoreEffect(); // 득점 이펙트 추가
+        const bonusCount = checkTriangle(lines[lines.length-1]);
+        if (bonusCount > 0) {
+            scores[currentPlayer] += (bonusCount * 10); // 땅 하나당 10점 적용
+            addScoreEffect();
             updateUI(); if (!checkGameOver() && currentPlayer === 2) setTimeout(aiMove, 600);
         } else {
             currentPlayer = currentPlayer === 1 ? 2 : 1;
@@ -256,7 +254,7 @@
         let possible = force ? false : points.some((p1, i) => points.slice(i+1).some(p2 => canConnect(p1, p2)));
         if (!possible) {
             isGameOver = true;
-            document.getElementById('winner-msg').innerText = scores[1] > scores[2] ? "플레이어 승리!" : "AI 승리!";
+            document.getElementById('winner-msg').innerText = scores[1] > scores[2] ? "플레이어 승리!" : (scores[1] === scores[2] ? "무승부!" : "AI 승리!");
             document.getElementById('game-over-screen').style.display = 'flex';
             return true;
         }
@@ -296,15 +294,14 @@
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
         });
 
-        // 득점 이펙트 그리기
         for (let i = scoreEffects.length - 1; i >= 0; i--) {
             let eff = scoreEffects[i];
             ctx.font = "bold 40px 'Malgun Gothic'";
             ctx.fillStyle = `rgba(241, 196, 15, ${eff.opacity})`;
             ctx.textAlign = "center";
-            ctx.fillText("+1 POINT", eff.x, eff.y);
-            eff.y -= 1.5; // 위로 이동
-            eff.opacity -= 0.02; // 점점 투명하게
+            ctx.fillText("+10 POINTS", eff.x, eff.y); // 메시지 10점으로 수정
+            eff.y -= 1.5;
+            eff.opacity -= 0.02;
             eff.life--;
             if (eff.life <= 0) scoreEffects.splice(i, 1);
         }
