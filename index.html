@@ -3,36 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 - 제국 vs 연맹 (v0.0.11)</title>
+    <title>우주전쟁 - 제국 vs 연맹 (v0.0.12)</title>
     <style>
-        /* 1. 디자인 및 배경 레이어 */
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
-        
-        /* 우주 배경 이미지 (투명도 적용) */
         #game-bg {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
                         url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover;
             z-index: 0;
         }
-
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
-        
-        /* 2. 타이틀 화면 (우주전쟁 스타일) */
         .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; padding: 20px; box-sizing: border-box; }
-        
         .rule-card { background: rgba(10, 10, 25, 0.9); padding: 30px; border-radius: 20px; border: 2px solid #d4af37; max-width: 450px; line-height: 1.6; position: relative; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); }
         .rule-list { text-align: left; display: inline-block; margin: 15px 0; font-size: 15px; color: #ecf0f1; }
-        
         h1 { font-size: 48px; color: #f1e5ac; text-shadow: 0 0 20px rgba(212, 175, 55, 0.8); margin-bottom: 20px; letter-spacing: 5px; }
         h2 { color: #d4af37; margin-top: 0; }
-
         .menu-btn { padding: 15px; margin: 8px; font-size: 18px; font-weight: bold; border: 2px solid #d4af37; background: transparent; color: #f1e5ac; border-radius: 5px; cursor: pointer; transition: 0.3s; width: 85%; max-width: 300px; }
         .menu-btn:hover { background: #d4af37; color: black; box-shadow: 0 0 15px #d4af37; }
-        
         .version-tag { position: absolute; bottom: 10px; right: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.4); font-family: monospace; }
-        
-        /* 인게임 UI */
         #ingame-ui { position: absolute; top: 20px; left: 0; width: 100%; pointer-events: none; display: none; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 50; }
         .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; border-radius: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); }
         .p1-ui { color: #2ecc71; border-color: #2ecc71; } 
@@ -52,11 +40,11 @@
             <h2>📜 제국 vs 연맹 규칙</h2>
             <ul class="rule-list">
                 <li>📐 삼각형 완성 시 <b>10점</b> + 추가 턴!</li>
-                <li>💣 <b>폭탄</b> 포함 땅: <b>-5점</b> (턴은 유지!)</li>
+                <li>💣 <b>폭탄</b> 포함 땅: <b>-5점</b></li>
                 <li>💖 <b>하트</b> 포함 땅: <b>다음 턴 점수 2배!</b></li>
-                <li>⚡ <b>매 5초</b>마다 빈 땅에 아이템이 보급됩니다!</li>
+                <li>⚡ <b>매 턴 마다</b> 무작위 아이템 보급!</li>
             </ul>
-            <div class="version-tag">poongye v0.0.11</div>
+            <div class="version-tag">poongye v0.0.12</div>
         </div>
         <button class="menu-btn" onclick="showDifficulty()">전장으로 진입하기</button>
     </div>
@@ -92,13 +80,10 @@
     <canvas id="gameCanvas"></canvas>
 
 <script>
-    /** * [바람의 삼각형 v0.0.11 엔진 로직 그대로 이식] 
-     */
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let audioCtx, bgm = document.getElementById('bgm'), isBGMOn = true;
     
-    // 아이콘 이미지
     const bombImg = new Image();
     bombImg.src = 'data:image/svg+xml;base64,' + btoa('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="13" r="8" fill="#c0392b" stroke="#000" stroke-width="2"/><path d="M14 6L16 4" stroke="#f1c40f" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="4" r="2" fill="#f1c40f"/></svg>');
     const heartImg = new Image();
@@ -109,6 +94,7 @@
     function playExplosion() { if(!audioCtx) return; const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='square'; o.frequency.setValueAtTime(80, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime+0.4); g.gain.setValueAtTime(0.4, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.4); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.4); }
 
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=0, scores={1:0, 2:0}, isGameOver=false, effects=[], doubleScore={1:false, 2:false}, itemTimer=null, aiLevel;
+    let itemSpawnedInTurn = false; // 한 턴에 하나만 생성되도록 체크하는 변수
 
     function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resize); resize();
@@ -120,28 +106,55 @@
     function startGame(count) {
         document.getElementById('ingame-ui').style.display='flex';
         currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; doubleScore={1:false, 2:false}; effects=[];
+        itemSpawnedInTurn = false;
+
         for(let i=0; i<count; i++) {
-            let r=Math.random();
-            points.push({ x:Math.random()*(canvas.width-200)+100, y:Math.random()*(canvas.height-200)+100, isBomb: r<0.15, isHeart: r>0.93 });
+            spawnInitialPoint();
         }
+        
         if(itemTimer) clearInterval(itemTimer);
-        itemTimer = setInterval(spawnDynamicItem, 5000);
+        itemTimer = setInterval(spawnDynamicItem, 4000); 
         updateUI(); drawLoop();
     }
 
+    function spawnInitialPoint() {
+        let nx, ny, tooClose;
+        do {
+            nx = Math.random()*(canvas.width-200)+100;
+            ny = Math.random()*(canvas.height-200)+100;
+            tooClose = points.some(p => Math.hypot(p.x-nx, p.y-ny) < 60);
+        } while(tooClose);
+        
+        let r = Math.random();
+        points.push({ x:nx, y:ny, isBomb: r<0.15, isHeart: r>0.93 });
+    }
+
     function isPointInTriangle(p, t) {
-        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y))/2);
+        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-1-p3.y) + p3.x*(p1.y-p2.y))/2);
         let A = area(t.p1, t.p2, t.p3), A1 = area(p, t.p1, t.p2), A2 = area(p, t.p2, t.p3), A3 = area(p, t.p3, t.p1);
         return Math.abs(A - (A1 + A2 + A3)) < 1.0;
     }
 
     function spawnDynamicItem() {
-        if(isGameOver) return;
-        let nx = Math.random()*(canvas.width-200)+100, ny = Math.random()*(canvas.height-200)+100;
-        if(triangles.some(t => isPointInTriangle({x:nx, y:ny}, t)) || points.some(p => Math.hypot(p.x-nx, p.y-ny) < 60)) return;
+        if(isGameOver || itemSpawnedInTurn) return; // 이미 생성되었으면 통과
+        
+        let nx, ny, tooClose, inTri;
+        let attempts = 0;
+        do {
+            nx = Math.random()*(canvas.width-200)+100;
+            ny = Math.random()*(canvas.height-200)+100;
+            tooClose = points.some(p => Math.hypot(p.x-nx, p.y-ny) < 70);
+            inTri = triangles.some(t => isPointInTriangle({x:nx, y:ny}, t));
+            attempts++;
+        } while((tooClose || inTri) && attempts < 20);
+
+        if(attempts >= 20) return;
+
+        itemSpawnedInTurn = true; // 아이템 생성 예약됨
         const isHeart = Math.random() < 0.25;
         addEffect(isHeart ? "💖 보급품 투하!" : "⚠️ 기뢰 매설!", isHeart ? "#ff69b4" : "#ff3f34");
         playTone(isHeart ? 1000 : 200, 'sine', 0.2, 0.1);
+        
         setTimeout(() => {
             if(isGameOver) return;
             points.push({ x:nx, y:ny, isBomb: !isHeart, isHeart: isHeart });
@@ -164,6 +177,7 @@
         if(lines.some(l => isIntersecting(p1,p2,l.p1,l.p2))) return false;
         return !points.some(p => { if(p===p1||p===p2) return false; return Math.abs(Math.hypot(p2.x-p1.x, p2.y-p1.y)-(Math.hypot(p.x-p1.x, p.y-p1.y)+Math.hypot(p.x-p2.x, p.y-p2.y))) < 1.0; });
     }
+    
     function isIntersecting(p1,p2,p3,p4) { const cp=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x); return (((cp(p3,p4,p1)>0 && cp(p3,p4,p2)<0)||(cp(p3,p4,p1)<0 && cp(p3,p4,p2)>0))&&((cp(p1,p2,p3)>0 && cp(p1,p2,p4)<0)||(cp(p1,p2,p3)<0 && cp(p1,p2,p4)>0))); }
 
     function attemptMove(p1, p2) {
@@ -189,18 +203,25 @@
             });
             scores[currentPlayer] += turnSum;
             doubleScore[currentPlayer] = gotHeart;
-            updateUI(); if(checkGameOver()) return;
+            updateUI(); 
+            if(checkGameOver()) return;
+            // 점수를 얻었으면 턴이 유지되므로 아이템 생성 체크 유지
+            if(currentPlayer === 2) setTimeout(aiMove, 800);
         } else {
+            // 턴이 넘어감
             doubleScore[currentPlayer] = false;
             currentPlayer = currentPlayer===1 ? 2 : 1;
-            updateUI(); if(currentPlayer===2) setTimeout(aiMove, 800);
+            itemSpawnedInTurn = false; // 턴이 바뀌었으므로 다음 아이템 생성 가능
+            updateUI(); 
+            if(currentPlayer===2) setTimeout(aiMove, 800);
         }
     }
 
     function aiMove() {
-        if(isGameOver) return;
+        if(isGameOver || currentPlayer !== 2) return;
         let moves = [];
         points.forEach((p1,i) => points.slice(i+1).forEach(p2 => { if(canConnect(p1,p2)) moves.push({p1,p2}); }));
+        
         if(moves.length > 0) {
             let scoring = moves.filter(m => {
                 return points.some(p3 => {
@@ -236,8 +257,7 @@
     function addEffect(t, c) { effects.push({x:canvas.width/2, y:canvas.height/2, t, c, a:1, l:60}); }
 
     function drawLoop() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // 배경 이미지를 보이게 하기 위해 clearRect 사용
-        
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
             ctx.fillStyle = t.player===1 ? 'rgba(46,204,113,0.3)' : 'rgba(231,76,60,0.3)'; ctx.fill();
