@@ -3,25 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.14.7 - 풍예 에디션</title>
+    <title>우주전쟁 v0.0.14.8 - 풍예 에디션</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
-        #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
+        #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
         
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.8); }
-        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #3498db; max-width: 400px; }
+        /* 설정 및 오버레이 화면 */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.85); }
+        .rule-card { background: rgba(15, 15, 35, 0.95); padding: 35px; border-radius: 25px; border: 2px solid #3498db; max-width: 450px; box-shadow: 0 0 50px rgba(52, 152, 219, 0.5); }
         
-        .setup-group { margin: 15px 0; text-align: left; }
-        select, input { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; background: #111; color: white; border: 1px solid #3498db; }
+        .setup-group { margin: 15px 0; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px; }
+        label { color: #00ffcc; font-size: 14px; font-weight: bold; display: block; margin-bottom: 8px; }
+        select, input { width: 100%; padding: 10px; border-radius: 6px; background: #111; color: white; border: 1px solid #3498db; box-sizing: border-box; }
 
-        .menu-btn { padding: 15px; margin-top: 20px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 10px; cursor: pointer; width: 100%; }
+        .menu-btn { padding: 16px; margin-top: 25px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; transition: 0.3s; }
+        .menu-btn:hover { background: #2980b9; box-shadow: 0 0 20px #3498db; }
         
-        #ingame-ui { position: absolute; top: 20px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; }
-        .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #fff3; }
-        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; align-items: center; gap: 20px; background: rgba(0,0,0,0.9); padding: 10px 25px; border-radius: 50px; border: 1px solid #00ffcc; }
-        #skill-bar-bg { width: 150px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid #00ffcc; overflow: hidden; }
-        #skill-bar { width: 0%; height: 100%; background: #00ffcc; transition: 0.3s; }
+        /* 인게임 UI */
+        #ingame-ui { position: absolute; top: 25px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 50px; box-sizing: border-box; pointer-events: none; }
+        .score-box { font-size: 24px; font-weight: bold; padding: 12px 25px; background: rgba(0,0,0,0.8); border-radius: 15px; border: 1px solid rgba(255,255,255,0.2); }
+        
+        #bottom-ctrl { position: absolute; bottom: 35px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; align-items: center; gap: 25px; background: rgba(0,0,0,0.9); padding: 15px 35px; border-radius: 50px; border: 1px solid #00ffcc; }
+        #skill-bar-bg { width: 200px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 7px; border: 1px solid #00ffcc; overflow: hidden; margin-top: 5px; }
+        #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); transition: 0.3s; }
+        
+        #ver-tag { position: absolute; bottom: 10px; right: 20px; font-size: 12px; color: rgba(0,255,204,0.6); z-index: 200; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -31,34 +38,48 @@
 
     <div id="rule-screen" class="overlay">
         <div class="rule-card">
-            <h1>🌌 우주전쟁 v0.0.14.7</h1>
+            <h1 style="margin:0 0 5px 0; color:#3498db; font-size: 32px;">🌌 우주전쟁 v0.0.14.8</h1>
+            <p style="font-size:14px; color:#00ffcc; margin-bottom:25px; letter-spacing: 1px;">풍예(바람의 후예) 마스터 에디션</p>
+            
             <div class="setup-group">
-                <label>🤖 난이도</label>
-                <select id="ai-diff"><option value="800">보통</option><option value="400">어려움</option></select>
+                <label>🤖 제국군 AI 난이도</label>
+                <select id="ai-diff">
+                    <option value="1000">보통 (Normal)</option>
+                    <option value="500">어려움 (Hard)</option>
+                </select>
             </div>
+            
             <div class="setup-group">
-                <label>✨ 별 개수</label>
+                <label>✨ 별의 개수 (밀도)</label>
                 <input type="range" id="star-count" min="15" max="30" value="20">
+                <div id="star-val" style="text-align:right; font-size:12px; margin-top:5px;">20개</div>
             </div>
-            <button class="menu-btn" onclick="showGame()">전투 개시</button>
+
+            <button class="menu-btn" onclick="showGame()">은하계 수호 시작</button>
+            <div style="font-size:11px; color:#777; margin-top:20px; text-align:left; line-height:1.6;">
+                ✅ 별 선택 시 색상 반전 효과 복원<br>
+                ✅ 천체 간 최소 간격 130px 보장 (겹침 방지)<br>
+                ✅ AI 행동 불능 버그 완전 해결
+            </div>
         </div>
     </div>
 
     <div id="ingame-ui">
         <div class="score-box" style="color:#2ecc71;">연맹군: <span id="s1">0</span></div>
-        <div id="mid-msg" style="font-size:24px; font-weight:bold;"></div>
+        <div id="mid-msg" style="font-size:28px; font-weight:bold; text-shadow: 0 0 15px rgba(0,0,0,1);"></div>
         <div class="score-box" style="color:#e74c3c;">제국군: <span id="s2">0</span></div>
     </div>
 
     <div id="bottom-ctrl">
-        <button onclick="toggleBGM()" style="background:none; border:none; color:white; cursor:pointer;">🎵 BGM</button>
+        <button id="bgm-btn" onclick="toggleBGM()" style="background:none; border:none; color:white; cursor:pointer; font-weight:bold; font-size:16px;">🎵 BGM</button>
         <div style="text-align:center;">
-            <div id="skill-label" style="font-size:10px; color:#00ffcc;">WIND ENERGY [S]</div>
+            <div id="skill-label" style="font-size:11px; color:#00ffcc; font-weight:bold;">WIND ENERGY [S]</div>
             <div id="skill-bar-bg"><div id="skill-bar"></div></div>
         </div>
-        <button onclick="location.reload()" style="background:none; border:1px solid #e74c3c; color:#e74c3c; border-radius:10px; cursor:pointer;">🏳️ 포기</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #e74c3c; color:#e74c3c; border-radius:12px; padding:6px 15px; cursor:pointer; font-size:13px; font-weight:bold;">🏳️ 종료</button>
     </div>
 
+    <div id="ver-tag">v0.0.14.8 PungYe Edition</div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
@@ -66,7 +87,12 @@
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
     let skillGauge=0, effects=[], bgm = document.getElementById('bgm'), isBGMPlaying = false;
-    let aiDelay = 800;
+    let aiDelay = 1000;
+
+    // 슬라이더 값 업데이트
+    document.getElementById('star-count').oninput = function() { 
+        document.getElementById('star-val').innerText = this.value + "개"; 
+    };
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(freq, type, duration, vol=0.1) {
@@ -86,8 +112,8 @@
 
     function toggleBGM() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        if (!isBGMPlaying) { bgm.play().catch(()=>{}); isBGMPlaying = true; }
-        else { bgm.pause(); isBGMPlaying = false; }
+        if (!isBGMPlaying) { bgm.play().catch(()=>{}); isBGMPlaying = true; document.getElementById('bgm-btn').style.color = "#00ffcc"; }
+        else { bgm.pause(); isBGMPlaying = false; document.getElementById('bgm-btn').style.color = "white"; }
     }
 
     function showGame() {
@@ -102,21 +128,24 @@
     function startGame(count) {
         points = []; lines = []; triangles = []; scores = {1:0, 2:0}; skillGauge = 0; currentPlayer = 1;
         
-        // 1. 태양 (중앙)
+        // 1. 태양 배치 (중앙)
         points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
 
-        // 2. 완벽 겹침 방지 배치
-        let safetyCounter = 0;
-        while(points.length < count && safetyCounter < 2000) {
-            let nx = 100 + Math.random() * (canvas.width - 200);
-            let ny = 100 + Math.random() * (canvas.height - 200);
+        // 2. 물리적 겹침 방지 배치 알고리즘 (강화 버전)
+        let safeDistance = 130; // 130px 이내 겹침 방지
+        let attempts = 0;
+        while(points.length < count && attempts < 5000) {
+            let nx = 150 + Math.random() * (canvas.width - 300);
+            let ny = 150 + Math.random() * (canvas.height - 300);
             
-            // 모든 별 사이의 거리를 최소 110px 이상으로 고정
-            if (points.every(p => Math.hypot(p.x - nx, p.y - ny) > 110)) {
+            // 모든 기존 포인트와 최소 거리 보장 검사
+            let isTooClose = points.some(p => Math.hypot(p.x - nx, p.y - ny) < safeDistance);
+            
+            if (!isTooClose) {
                 let r = Math.random();
-                points.push({ x: nx, y: ny, isCore: false, isBomb: r < 0.12, isHeart: r > 0.9 });
+                points.push({ x: nx, y: ny, isCore: false, isBomb: r < 0.12, isHeart: r > 0.88 });
             }
-            safetyCounter++;
+            attempts++;
         }
         updateUI(); drawLoop();
     }
@@ -135,7 +164,7 @@
             let d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
             let d1 = Math.hypot(p.x - p1.x, p.y - p1.y);
             let d2 = Math.hypot(p.x - p2.x, p.y - p2.y);
-            return Math.abs(d - (d1 + d2)) < 0.5;
+            return Math.abs(d - (d1 + d2)) < 0.3; // 선 위에 별이 있는 경우 방지
         });
     }
 
@@ -158,16 +187,16 @@
                 let mult = Math.round((1 + (1 - Math.min(sunDist/(canvas.width/2), 1)) * 2) * 10) / 10;
                 
                 if(p1.isBomb || p2.isBomb || p3.isBomb) {
-                    scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 30);
-                    effects.push({x:cx, y:cy, text:"💣 BOOM! -30", color:"#ff3f34", alpha:1.5});
-                    playSound(100, 'sawtooth', 0.4);
+                    scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 35);
+                    effects.push({x:cx, y:cy, text:"💣 BOOM! -35", color:"#ff3f34", alpha:1.5});
+                    playSound(100, 'sawtooth', 0.6);
                 } else {
-                    let score = Math.floor(10 * mult);
+                    let score = Math.floor(12 * mult);
                     scores[currentPlayer] += score;
                     effects.push({x:cx, y:cy, text:`+${score} (x${mult})`, color:currentPlayer===1?"#2ecc71":"#e74c3c", alpha:1.5});
-                    playSound(880, 'square', 0.2);
+                    playSound(880, 'square', 0.25);
                 }
-                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 35);
+                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 34);
                 foundTriangle = true;
             }
         });
@@ -189,22 +218,23 @@
             let choice = possible[Math.floor(Math.random()*possible.length)];
             attemptMove(choice[0], choice[1]);
         } else {
-            currentPlayer = 1; updateUI(); // 둘 곳 없으면 강제 전환
+            currentPlayer = 1; updateUI(); // 둘 곳 없으면 연맹군에게 턴 넘김
         }
     }
 
+    // 바람의 스킬 (S키)
     window.addEventListener('keydown', e => {
         if(e.code === 'KeyS' && skillGauge >= 100 && currentPlayer === 1) {
             skillGauge = 0;
-            playSound(200, 'sawtooth', 0.8, 0.3);
-            effects.push({x: canvas.width/2, y: canvas.height/2, text: "💨 WIND ENERGY!", color: "#00ffcc", alpha: 2, size: 40});
+            playSound(200, 'sawtooth', 1.0, 0.4);
+            effects.push({x: canvas.width/2, y: canvas.height/2, text: "💨 WIND ENERGY BURST!", color: "#00ffcc", alpha: 2, size: 45});
             for(let i=0; i<3; i++) {
                 let p1 = points[Math.floor(Math.random()*points.length)];
                 let p2 = points[Math.floor(Math.random()*points.length)];
                 let p3 = points[Math.floor(Math.random()*points.length)];
                 if(p1!==p2 && p1!==p3 && p2!==p3) {
                     triangles.push({p1, p2, p3, player: 1, anim: 0});
-                    scores[1] += 40;
+                    scores[1] += 50;
                 }
             }
             updateUI();
@@ -214,43 +244,89 @@
     function updateUI() {
         document.getElementById('s1').innerText = scores[1];
         document.getElementById('s2').innerText = scores[2];
-        document.getElementById('skill-bar').style.width = skillGauge + "%";
+        const bar = document.getElementById('skill-bar');
+        bar.style.width = skillGauge + "%";
+        
         const m = document.getElementById('mid-msg');
-        m.innerText = currentPlayer === 1 ? "연맹군 차례" : "제국군 차례";
+        m.innerText = currentPlayer === 1 ? "연맹군(풍예) 차례" : "제국군(AI) 차례";
         m.style.color = currentPlayer === 1 ? "#2ecc71" : "#e74c3c";
+        
+        if(skillGauge >= 100) {
+            bar.style.background = "#fff";
+            document.getElementById('skill-label').innerText = "READY! PRESS [S]";
+        } else {
+            bar.style.background = "linear-gradient(90deg, #00ffcc, #3498db)";
+            document.getElementById('skill-label').innerText = "WIND ENERGY [S]";
+        }
     }
 
     function drawLoop() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
+        
+        // 삼각형(영역) 그리기
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player === 1 ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)'; ctx.fill();
-            ctx.strokeStyle = t.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.stroke();
+            ctx.fillStyle = t.player === 1 ? 'rgba(46,204,113,0.18)' : 'rgba(231,76,60,0.18)'; ctx.fill();
+            ctx.strokeStyle = t.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
+            // 유닛 표시 (🛸 / 🛰️)
+            ctx.font = "24px Arial"; ctx.textAlign = "center";
+            ctx.fillText(t.player === 1 ? "🛸" : "🛰️", (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3 + 8);
         });
+
+        // 라인 그리기
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
-            ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2.5; ctx.stroke();
         });
+
+        // 별(포인트) 그리기
         points.forEach(p => {
-            ctx.font = p.isCore ? "50px Arial" : "34px Arial"; ctx.textAlign = "center";
-            ctx.fillText(p.isCore?"☀️":(p.isBomb?"💣":(p.isHeart?"💖":"✨")), p.x, p.y + 12);
-            if(selectedPoint === p) { ctx.strokeStyle = "white"; ctx.beginPath(); ctx.arc(p.x, p.y, 25, 0, Math.PI*2); ctx.stroke(); }
+            ctx.save();
+            let isSelected = (selectedPoint === p);
+            
+            // ⭐ [핵심 복원] 별 선택 시 반전(Invert) 및 강조 효과
+            if(isSelected) {
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = "white";
+                ctx.scale(1.35, 1.35); // 크기 확대
+                ctx.filter = "invert(1)"; // 색상 반전 효과
+            }
+            
+            ctx.font = p.isCore ? "52px Arial" : "36px Arial"; 
+            ctx.textAlign = "center";
+            let icon = p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨"));
+            
+            // 확대 시 위치 보정
+            let drawX = isSelected ? p.x / 1.35 : p.x;
+            let drawY = (isSelected ? p.y / 1.35 : p.y) + 12;
+            ctx.fillText(icon, drawX, drawY);
+            ctx.restore();
         });
+
+        // 이펙트 애니메이션
         for(let i=effects.length-1; i>=0; i--) {
             let e = effects[i]; ctx.save(); ctx.globalAlpha = Math.min(1, e.alpha); ctx.fillStyle = e.color;
-            ctx.font = `bold ${e.size||20}px Arial`; ctx.textAlign="center"; ctx.fillText(e.text, e.x, e.y);
-            ctx.restore(); e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
+            ctx.font = `bold ${e.size||22}px Arial`; ctx.textAlign="center"; ctx.fillText(e.text, e.x, e.y);
+            ctx.restore(); e.y -= 1.2; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
         }
         requestAnimationFrame(drawLoop);
     }
 
+    // 클릭 이벤트
     canvas.addEventListener('mousedown', e => {
         if(currentPlayer !== 1) return;
-        const p = points.find(pt => Math.hypot(pt.x - e.clientX, pt.y - e.clientY) < 40);
+        const p = points.find(pt => Math.hypot(pt.x - e.clientX, pt.y - e.clientY) < 50);
         if(p) {
-            if(!selectedPoint) { selectedPoint = p; playSound(600, 'sine', 0.05); }
-            else { attemptMove(selectedPoint, p); selectedPoint = null; }
-        } else selectedPoint = null;
+            if(!selectedPoint) { 
+                selectedPoint = p; 
+                playSound(650, 'sine', 0.06); 
+            } else { 
+                attemptMove(selectedPoint, p); 
+                selectedPoint = null; 
+            }
+        } else {
+            selectedPoint = null;
+        }
     });
 </script>
 </body>
