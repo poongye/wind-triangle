@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.14.2 - 풍예 에디션</title>
+    <title>우주전쟁 v0.0.14.3 - 풍예 에디션</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
@@ -35,10 +35,10 @@
     <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
 
     <div id="rule-screen" class="overlay">
-        <h1>🌌 우주전쟁 v0.0.14.2</h1>
+        <h1>🌌 우주전쟁 v0.0.14.3</h1>
         <div class="rule-card">
-            <h2>☀️ 태양 에너지 보너스</h2>
-            <p>태양 근처에 기지를 건설하면 더 큰 점수를 얻습니다.<br>위험을 무릅쓰고 중심부를 장악하세요!</p>
+            <h2>🎵 오디오 시스템 복구</h2>
+            <p>별들의 위치를 안정화하고 타격감 있는 효과음을 복원했습니다.</p>
             <button class="menu-btn" onclick="showGame()">전투 개시</button><br>
             <button class="menu-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="togglePatchNotes(true)">📋 패치 노트</button>
         </div>
@@ -46,12 +46,12 @@
 
     <div id="patch-notes">
         <h2 style="color:#00ffcc; border-bottom: 2px solid #00ffcc; padding-bottom: 10px;">📋 업데이트 기록</h2>
+        <div class="patch-ver">v0.0.14.3</div>
+        <div>- <b>효과음(SFX) 시스템 복구:</b> 연결, 점수 획득, 폭탄음 복원<br>- 오브젝트 겹침 방지 로직 고정 및 물리 안정화</div>
         <div class="patch-ver">v0.0.14.2</div>
-        <div>- <b>태양 거리 보너스:</b> 중앙 태양에 가까울수록 최대 3배 점수 획득<br>- 점수 획득 시 배율 표시 이펙트 추가</div>
+        <div>- 태양 거리 보너스: 중앙에 가까울수록 최대 3배 점수</div>
         <div class="patch-ver">v0.0.14.1</div>
-        <div>- 오브젝트 겹침 방지: 모든 천체 간 최소 거리(80px) 확보</div>
-        <div class="patch-ver">v0.0.14.0</div>
-        <div>- AI 규칙 준수: AI도 물리 충돌 및 통과 불가 규칙 적용</div>
+        <div>- 오브젝트 겹침 방지: 모든 천체 간 최소 80px 거리 확보</div>
         <button class="menu-btn" style="width:100%; margin-top:20px;" onclick="togglePatchNotes(false)">닫기</button>
     </div>
 
@@ -70,7 +70,7 @@
         <button class="ctrl-btn quit-btn" onclick="if(confirm('포기하시겠습니까?')) location.reload()">🏳️ 포기</button>
     </div>
 
-    <div id="ver-tag">v0.0.14.2 (PungYe Edition)</div>
+    <div id="ver-tag">v0.0.14.3 (PungYe Edition)</div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
@@ -78,12 +78,26 @@
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
     let skillGauge=0, effects=[], frame = 0, bgm = document.getElementById('bgm'), isBGMPlaying = false;
+    
+    // --- 효과음 생성기 (Web Audio API) ---
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(freq, type, duration, vol=0.1) {
+        if (!isBGMPlaying) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + duration);
+    }
 
     function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
     function togglePatchNotes(show) { document.getElementById('patch-notes').style.display = show ? 'block' : 'none'; }
     function toggleBGM() {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
         if (!isBGMPlaying) { bgm.play().catch(e=>{}); document.getElementById('bgm-toggle').innerText = "🔇 사운드 OFF"; isBGMPlaying = true; }
         else { bgm.pause(); document.getElementById('bgm-toggle').innerText = "🎵 사운드 ON"; isBGMPlaying = false; }
     }
@@ -103,8 +117,8 @@
             let nx, ny, att = 0, overlap;
             do {
                 overlap = false; nx = Math.random()*(canvas.width-240)+120; ny = Math.random()*(canvas.height-240)+120; att++;
-                if (points.some(p => Math.hypot(p.x - nx, p.y - ny) < 80)) overlap = true;
-            } while(overlap && att < 100);
+                if (points.some(p => Math.hypot(p.x - nx, p.y - ny) < 85)) overlap = true;
+            } while(overlap && att < 150);
             let r = Math.random();
             points.push({ x: nx, y: ny, isCore: false, isBomb: r < 0.08, isHeart: r > 0.94 });
         }
@@ -131,41 +145,37 @@
         });
     }
 
-    function addEffect(x, y, text, color) {
-        effects.push({ x, y, text, color, alpha: 1.0 });
-    }
-
     function attemptMove(p1, p2) {
         if (!canConnect(p1, p2)) return;
+        playSound(440, 'sine', 0.1); // 연결 소리
         lines.push({p1, p2, player:currentPlayer});
         let found = false;
         points.forEach(p3 => {
             if(p3===p1 || p3===p2) return;
             const l1 = lines.find(ln=>(ln.p1===p1&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p1));
             const l2 = lines.find(ln=>(ln.p1===p2&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p2));
-            if(l1 && l2) {
-                if(!triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
-                    let cx = (p1.x + p2.x + p3.x) / 3;
-                    let cy = (p1.y + p2.y + p3.y) / 3;
-                    
-                    // 태양 보너스 계산
-                    const core = points.find(p => p.isCore);
-                    const distToSun = Math.hypot(cx - core.x, cy - core.y);
-                    const maxDist = Math.hypot(canvas.width, canvas.height) / 2;
-                    let sunMult = 1.0 + (1.0 - Math.min(distToSun / maxDist, 1.0)) * 2.0; // 태양에 가까울수록 최대 3배
-                    sunMult = Math.round(sunMult * 10) / 10;
+            if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
+                let cx = (p1.x + p2.x + p3.x) / 3, cy = (p1.y + p2.y + p3.y) / 3;
+                const core = points.find(p => p.isCore);
+                const distToSun = Math.hypot(cx - core.x, cy - core.y);
+                const maxDist = Math.hypot(canvas.width, canvas.height) / 2;
+                let sunMult = Math.round((1.0 + (1.0 - Math.min(distToSun / maxDist, 1.0)) * 2.0) * 10) / 10;
 
-                    triangles.push({p1,p2,p3,player:currentPlayer, anim:0, isCore:(p1.isCore||p2.isCore||p3.isCore)});
-                    
-                    let baseScore = (p1.isCore||p2.isCore||p3.isCore) ? 30 : 10;
-                    let finalAdd = Math.floor(baseScore * sunMult);
+                triangles.push({p1,p2,p3,player:currentPlayer, anim:0});
+                
+                let isBomb = (p1.isBomb || p2.isBomb || p3.isBomb);
+                if(isBomb) {
+                    scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 20);
+                    playSound(150, 'sawtooth', 0.4, 0.2); // 폭탄 터지는 소리
+                    effects.push({x:cx, y:cy, text:"💣 BOOM! -20", color:"#ff3f34", alpha:1});
+                } else {
+                    let finalAdd = Math.floor(10 * sunMult);
                     scores[currentPlayer] += finalAdd;
-
-                    addEffect(cx, cy, `+${finalAdd} (x${sunMult})`, currentPlayer === 1 ? "#2ecc71" : "#e74c3c");
-
-                    if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 25);
-                    found = true;
+                    playSound(880, 'square', 0.2, 0.1); // 점수 획득 소리
+                    effects.push({x:cx, y:cy, text:`+${finalAdd} (x${sunMult})`, color:currentPlayer===1?"#2ecc71":"#e74c3c", alpha:1});
                 }
+                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 25);
+                found = true;
             }
         });
         if(!found) currentPlayer = currentPlayer===1 ? 2 : 1;
@@ -195,8 +205,6 @@
 
     function drawLoop() {
         frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
-        
-        // 삼각형 그리기
         triangles.forEach(t => {
             ctx.save(); ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
             ctx.fillStyle = t.player===1 ? 'rgba(46,204,113,0.12)' : 'rgba(231,76,60,0.12)'; ctx.fill();
@@ -205,14 +213,10 @@
             ctx.translate((t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3); ctx.scale(t.anim, t.anim);
             ctx.font = "30px Arial"; ctx.textAlign="center"; ctx.fillText(t.player===1?"🛸":"🛰️", 0, 10); ctx.restore();
         });
-
-        // 선 그리기
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
             ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
-
-        // 별 그리기
         points.forEach(p => {
             ctx.save(); let s = (selectedPoint === p) ? 1.3 : 1.0;
             if(selectedPoint === p) ctx.filter = "invert(1) brightness(2)";
@@ -220,23 +224,17 @@
             ctx.font = p.isCore ? "45px Arial" : "30px Arial"; ctx.textAlign="center";
             ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), 0, 10); ctx.restore();
         });
-
-        // 이펙트 그리기
         for(let i = effects.length - 1; i >= 0; i--) {
-            let e = effects[i];
-            ctx.save(); ctx.globalAlpha = e.alpha; ctx.fillStyle = e.color; ctx.font = "bold 18px Arial"; ctx.textAlign = "center";
-            ctx.fillText(e.text, e.x, e.y); ctx.restore();
-            e.y -= 1; e.alpha -= 0.02;
-            if(e.alpha <= 0) effects.splice(i, 1);
+            let e = effects[i]; ctx.save(); ctx.globalAlpha = e.alpha; ctx.fillStyle = e.color; ctx.font = "bold 18px Arial"; ctx.textAlign = "center";
+            ctx.fillText(e.text, e.x, e.y); ctx.restore(); e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
         }
-
         requestAnimationFrame(drawLoop);
     }
 
     canvas.addEventListener('mousedown', e => {
         const p = points.find(pt => Math.hypot(pt.x-e.clientX, pt.y-e.clientY) < 35);
         if(p && currentPlayer===1) {
-            if(!selectedPoint) selectedPoint = p;
+            if(!selectedPoint) { selectedPoint = p; playSound(600, 'sine', 0.05, 0.05); }
             else { if(canConnect(selectedPoint, p)) attemptMove(selectedPoint, p); selectedPoint = null; }
         } else { selectedPoint = null; }
     });
