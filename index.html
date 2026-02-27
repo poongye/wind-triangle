@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>바람의 삼각형 - poongye v0.0.10</title>
+    <title>바람의 삼각형 - poongye v0.0.11</title>
     <style>
         body { margin: 0; overflow: hidden; background: #0b0e14; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -31,11 +31,11 @@
             <h2>📜 게임 규칙</h2>
             <ul class="rule-list">
                 <li>📐 삼각형 완성 시 <b>10점</b> + 추가 턴!</li>
-                <li>💣 <b>폭탄</b> 포함 땅: <b>-5점</b> (턴은 계속!)</li>
+                <li>💣 <b>폭탄</b> 포함 땅: <b>-5점</b> (턴은 유지!)</li>
                 <li>💖 <b>하트</b> 포함 땅: <b>다음 턴 점수 2배!</b></li>
-                <li>⚡ 게임 중 빈 공간에 <b>폭탄/하트</b>가 떨어집니다!</li>
+                <li>⚡ <b>매 5초</b>마다 빈 땅에 아이템이 하나씩 떨어집니다!</li>
             </ul>
-            <div class="version-tag">v0.0.10</div>
+            <div class="version-tag">v0.0.11</div>
         </div>
         <button class="menu-btn" onclick="showDifficulty()">게임 시작하기</button>
     </div>
@@ -99,10 +99,10 @@
         currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; doubleScore={1:false, 2:false}; effects=[];
         for(let i=0; i<count; i++) {
             let r=Math.random();
-            points.push({ x:Math.random()*(canvas.width-200)+100, y:Math.random()*(canvas.height-200)+100, isBomb: r<0.2, isHeart: r>0.92 });
+            points.push({ x:Math.random()*(canvas.width-200)+100, y:Math.random()*(canvas.height-200)+100, isBomb: r<0.15, isHeart: r>0.93 });
         }
         if(itemTimer) clearInterval(itemTimer);
-        itemTimer = setInterval(spawnDynamicItem, 7000); // 7초마다 폭탄/하트 생성
+        itemTimer = setInterval(spawnDynamicItem, 5000); // 주기 5초로 단축
         updateUI(); drawLoop();
     }
 
@@ -115,17 +115,20 @@
     function spawnDynamicItem() {
         if(isGameOver) return;
         let nx = Math.random()*(canvas.width-200)+100, ny = Math.random()*(canvas.height-200)+100;
-        if(triangles.some(t => isPointInTriangle({x:nx, y:ny}, t)) || points.some(p => Math.hypot(p.x-nx, p.y-ny) < 50)) {
-            setTimeout(spawnDynamicItem, 500); return;
+        
+        // 1개 제한 및 중복 방지 (기존 점들과 60px 이상 거리 유지)
+        if(triangles.some(t => isPointInTriangle({x:nx, y:ny}, t)) || points.some(p => Math.hypot(p.x-nx, p.y-ny) < 60)) {
+            return; 
         }
+        
         const isHeart = Math.random() < 0.25;
-        addEffect(isHeart ? "💖 HEART INBOUND!" : "⚠️ BOMB INBOUND!", isHeart ? "#ff69b4" : "#ff3f34");
+        addEffect(isHeart ? "💖 LUCKY HEART!" : "⚠️ BOMB INBOUND!", isHeart ? "#ff69b4" : "#ff3f34");
         playTone(isHeart ? 1000 : 200, 'sine', 0.2, 0.1);
         setTimeout(() => {
             if(isGameOver) return;
             points.push({ x:nx, y:ny, isBomb: !isHeart, isHeart: isHeart });
             playTone(isHeart ? 1200 : 150, 'sine', 0.3, 0.2);
-        }, 1500);
+        }, 1200);
     }
 
     function handleInput(x, y) {
@@ -163,7 +166,7 @@
             let turnSum = 0, gotHeart = false;
             newTris.forEach(t => {
                 if(t.isBomb) { turnSum -= 5; playExplosion(); addEffect("-5 BOMB!", "#e74c3c"); }
-                else if(t.isHeart) { turnSum += (10*mult); gotHeart = true; playTone(1200,'sine',0.3); addEffect("💖 DOUBLE NEXT!", "#ff69b4"); }
+                else if(t.isHeart) { turnSum += (10*mult); gotHeart = true; playTone(1200,'sine',0.3); addEffect("💖 DOUBLE!", "#ff69b4"); }
                 else { turnSum += (10*mult); playTone(880,'sine',0.2); addEffect("+"+(10*mult), "#f1c40f"); }
             });
             scores[currentPlayer] += turnSum;
@@ -189,14 +192,14 @@
                     return l1 && l2;
                 });
             });
-            let best = (scoring.length > 0 && aiLevel!=='easy') ? scoring[0] : moves[Math.floor(Math.random()*moves.length)];
+            let best = (scoring.length > 0 && aiLevel!=='easy') ? scoring[Math.floor(Math.random()*scoring.length)] : moves[Math.floor(Math.random()*moves.length)];
             attemptMove(best.p1, best.p2);
         } else { checkGameOver(true); }
     }
 
     function checkGameOver(f=false) {
         if(f || !points.some((p1,i)=>points.slice(i+1).some(p2=>canConnect(p1,p2)))) {
-            isGameOver=true; clearInterval(itemTimer);
+            isGameOver=true; if(itemTimer) clearInterval(itemTimer);
             document.getElementById('winner-msg').innerText = scores[1]>scores[2] ? "플레이어 승리!" : "AI 승리!";
             document.getElementById('final-scores').innerText = `USER: ${scores[1]} | AI: ${scores[2]}`;
             document.getElementById('game-over-screen').style.display='flex';
