@@ -3,262 +3,295 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.16.1</title>
+    <title>우주전쟁 v0.0.18.8</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; -webkit-tap-highlight-color: transparent; }
-        #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 1; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
-        
         #fixed-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
-        .score-container { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
-        .score-box { pointer-events: auto; font-size: 18px; font-weight: bold; padding: 10px 15px; background: rgba(0,0,0,0.8); border-radius: 12px; border: 1px solid #ffffff33; }
-        
-        #timer-display { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-size: 32px; font-weight: bold; color: #ff3e3e; text-shadow: 0 0 10px #000; }
-
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.85); pointer-events: auto; }
-        .rank-card { background: rgba(15, 15, 30, 0.98); padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 85%; max-width: 350px; text-align: center; }
-        
-        .setup-section { text-align: left; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 15px; }
-        .setup-item { margin-bottom: 8px; font-size: 14px; color: #00ffcc; }
-        select, input[type=range] { width: 100%; margin-top: 5px; background: #111; color: white; border: 1px solid #3498db; padding: 8px; border-radius: 5px; pointer-events: auto; }
-
-        .rank-list { background: rgba(0,0,0,0.5); border-radius: 10px; margin: 10px 0; padding: 8px; border: 1px solid #3498db44; max-height: 120px; overflow-y: auto; }
-        .rank-item { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #ffffff11; }
-        .rank-item.me { color: #00ffcc; font-weight: bold; }
-        
-        .start-btn { padding: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; pointer-events: auto; }
-        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: none; gap: 15px; background: rgba(0,0,0,0.85); padding: 10px 25px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; }
+        .score-container { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; }
+        .score-box { pointer-events: auto; font-size: 13px; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.85); border-radius: 8px; border: 1px solid #ffffff33; line-height: 1.5; min-width: 150px; }
+        #timer-display { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); font-size: 32px; font-weight: bold; color: #ff3e3e; text-shadow: 0 0 10px #000; }
+        #turn-msg { position: absolute; top: 135px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px #000; width: 100%; text-align: center; }
+        #bottom-ctrl { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 10px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; z-index: 200; }
+        .ctrl-btn { position: relative; color: white; background: rgba(255,255,255,0.1); border: 1px solid #3498db; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+        #skill-gauge { position: absolute; bottom: 0; left: 0; height: 100%; background: #00ffcc; opacity: 0.4; width: 0%; transition: width 0.5s; z-index: -1; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.9); pointer-events: auto; }
+        .rank-card { background: #0f0f1e; padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 85%; max-width: 350px; text-align: center; }
+        .start-btn { padding: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 0 15px #3498db; }
+        select, input[type=range] { width: 100%; margin-top: 5px; background: #111; color: white; border: 1px solid #3498db; padding: 8px; border-radius: 5px; }
     </style>
 </head>
 <body>
-
-    <div id="game-bg"></div>
-    <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
+    <canvas id="gameCanvas"></canvas>
+    <audio id="bgm" loop preload="auto"><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-pop" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg"></audio>
 
     <div id="rule-screen" class="overlay">
         <div class="rank-card">
-            <h2 style="color:#3498db; margin:0 0 10px 0;">🌌 우주전쟁 v0.0.16.1</h2>
-            
-            <div class="setup-section">
-                <div class="setup-item">
-                    <label>🤖 AI 난이도</label>
-                    <select id="ai-diff"><option value="1200">보통</option><option value="600">어려움</option></select>
-                </div>
-                <div class="setup-item">
-                    <label>✨ 별 개수: <span id="sv">20</span>개</label>
-                    <input type="range" id="star-count" min="15" max="35" value="20" oninput="document.getElementById('sv').innerText=this.value">
-                </div>
+            <h2 style="color:#00ffcc; margin-bottom:5px;">🌬️ 바람의 후예</h2>
+            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">v0.0.18.8 복원 업데이트</p>
+            <div style="text-align:left; padding:15px; font-size:14px;">
+                <label>🤖 제국군 난이도:</label> 
+                <select id="ai-diff"><option value="1800">쉬움</option><option value="1200" selected>보통</option><option value="600">어려움</option></select>
+                <br><br>
+                <label>✨ 성계(별) 개수: <span id="sv">25</span>개</label> 
+                <input type="range" id="star-count" min="15" max="35" value="25" oninput="document.getElementById('sv').innerText=this.value">
+                <p style="color:#ff3e3e; font-size:11px; margin-top:10px;">⚠️ 10초 시간 초과 시 병력 -50억 손실!</p>
             </div>
+            <button class="start-btn" onclick="initAudioAndStart()">함대 출격</button>
+        </div>
+    </div>
 
-            <div style="font-size:13px; color:#aaa; margin-bottom:5px;">Poongye Global Ranking</div>
-            <div class="rank-list" id="rank-content"></div>
-
-            <button class="start-btn" id="real-start-btn">전투 개시</button>
+    <div id="result-screen" class="overlay" style="display:none;">
+        <div class="rank-card">
+            <h1 style="color:#ff3e3e; margin-bottom:10px;">작전 종료</h1>
+            <h2 id="final-score" style="color:white; font-size: 15px; line-height: 1.8; margin-bottom:20px;"></h2>
+            <h2 id="winner-text" style="color:#00ffcc; margin-bottom:20px;"></h2>
+            <button class="start-btn" onclick="location.reload()">새로운 전선으로</button>
         </div>
     </div>
 
     <div id="fixed-ui">
         <div class="score-container">
-            <div class="score-box" style="color:#2ecc71;">연맹: <span id="s1">0</span></div>
-            <div class="score-box" style="color:#e74c3c;">제국: <span id="s2">0</span></div>
+            <div class="score-box" style="color:#2ecc71; border-color:#2ecc71;">연맹 총 병력 :<br><span id="s1">0</span>억 명</div>
+            <div class="score-box" style="color:#e74c3c; border-color:#e74c3c; text-align:right;">제국 총 병력 :<br><span id="s2">0</span>억 명</div>
         </div>
         <div id="timer-display">10</div>
-        <div id="mid-msg" style="position:absolute; top:130px; left:50%; transform:translateX(-50%); font-weight:bold;"></div>
+        <div id="turn-msg">시스템 초기화 중...</div>
         <div id="bottom-ctrl">
-            <button onclick="toggleBGM()" style="color:white; background:none; border:none; cursor:pointer;">🎵 BGM</button>
-            <button onclick="location.reload()" style="color:#e74c3c; background:none; border:none; cursor:pointer;">🏳️ 종료</button>
+            <button class="ctrl-btn" onclick="toggleBGM()">🎵 주파수</button>
+            <button class="ctrl-btn" id="skill-btn" onclick="useWindShift()">⚡ 과부하<div id="skill-gauge"></div></button>
+            <button class="ctrl-btn" onclick="location.reload()">퇴각</button>
         </div>
     </div>
-
-    <canvas id="gameCanvas"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    
-    const playSound = (f, t, d) => {
-        try {
-            const a = new (AudioContext || webkitAudioContext)();
-            const o = a.createOscillator(); const g = a.createGain();
-            o.type = t; o.frequency.setValueAtTime(f, a.currentTime);
-            g.gain.setValueAtTime(0.05, a.currentTime); g.gain.exponentialRampToValueAtTime(0.01, a.currentTime+d);
-            o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+d);
-        } catch(e) {}
-    };
+    const bgImg = new Image();
+    bgImg.src = 'https://r.jina.ai/i/5688686e04d44439832267675e03222e';
+    let bgLoaded = false; bgImg.onload = () => { bgLoaded = true; };
 
-    let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
-    let effects=[], isGameOver = false, turnTime = 10, timerInterval, aiDelay = 1200;
+    let points=[], lines=[], triangles=[], selectedPoint=null, mousePos={x:0,y:0}, isDragging=false;
+    let currentPlayer=1, scores={1:0, 2:0}, effects=[], isGameOver = false, turnTime = 10, timerInterval, aiLevel = 1200, skillCharge = 0;
+    let aiAnim = { active: false, startP: null, targetP: null, currentPos: {x:0, y:0}, progress: 0 };
+    let gameStarted = false;
 
-    function loadRanking() {
-        const myBest = localStorage.getItem('poongye_highscore') || 0;
-        let ranks = [
-            {id: "Poongye(Me)", score: parseInt(myBest), ip: "124.53.***.***", me: true},
-            {id: "StarLord", score: 450, ip: "211.234.***.***", me: false},
-            {id: "Ace_X", score: 380, ip: "14.32.***.***", me: false}
-        ].sort((a,b)=>b.score - a.score);
-        document.getElementById('rank-content').innerHTML = ranks.map((r,i)=>`
-            <div class="rank-item ${r.me?'me':''}"><span>${i+1}. ${r.id}</span><span>${r.score}</span></div>
-        `).join('');
+    function fNum(n) { return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+
+    function initAudioAndStart() {
+        const bgm = document.getElementById('bgm');
+        const snd = document.getElementById('snd-pop');
+        // 오디오 강제 재생 후 정지로 권한 획득
+        bgm.play().then(() => { bgm.volume = 0.3; }).catch(() => {});
+        snd.play().then(() => { snd.pause(); snd.currentTime = 0; }).catch(() => {});
+        showGame();
     }
-    loadRanking();
 
-    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-    window.addEventListener('resize', resize); resize();
+    function playSound() { 
+        const s = document.getElementById('snd-pop');
+        if(s) { s.currentTime = 0; s.volume = 0.6; s.play().catch(()=>{}); }
+    }
 
-    // 모바일 클릭/터치 완벽 대응
-    const startBtn = document.getElementById('real-start-btn');
-    const startFn = (e) => {
-        e.preventDefault();
-        aiDelay = parseInt(document.getElementById('ai-diff').value);
-        document.getElementById('rule-screen').style.display='none';
-        document.getElementById('bottom-ctrl').style.display='flex';
-        startGame(parseInt(document.getElementById('star-count').value));
-    };
-    startBtn.addEventListener('click', startFn);
-    startBtn.addEventListener('touchstart', startFn);
+    function showGame() {
+        aiLevel = parseInt(document.getElementById('ai-diff').value);
+        let starCount = parseInt(document.getElementById('star-count').value);
+        document.getElementById('rule-screen').style.display = 'none';
+        document.getElementById('bottom-ctrl').style.display = 'flex';
+        startGame(starCount);
+    }
 
     function startGame(count) {
-        points = []; lines = []; triangles = []; scores = {1:0, 2:0}; currentPlayer = 1; isGameOver = false;
-        points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true, type: 'none' });
+        resize();
+        points = []; lines = []; triangles = []; scores = {1:0, 2:0}; 
+        currentPlayer = Math.random() > 0.5 ? 1 : 2; 
+        isGameOver = false; skillCharge = 0; gameStarted = true;
+        points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
         for(let i=0; i<count-1; i++) {
             let nx, ny, ok;
             do {
-                nx = 70 + Math.random() * (canvas.width - 140);
-                ny = 180 + Math.random() * (canvas.height - 320);
-                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 100);
+                nx = 50 + Math.random() * (canvas.width - 100);
+                ny = 150 + Math.random() * (canvas.height - 250);
+                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 65);
             } while(!ok);
-            points.push({ x: nx, y: ny, isCore: false, type: 'none' });
+            points.push({ x: nx, y: ny, isCore: false });
         }
-        startTimer(); updateUI(); drawLoop();
+        updateTurnMsg(); startTimer(); updateUI(); 
+        requestAnimationFrame(drawLoop);
+        if(currentPlayer === 2) setTimeout(aiThink, 1500);
+    }
+
+    function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+    window.addEventListener('resize', resize);
+
+    function updateTurnMsg() {
+        const msg = document.getElementById('turn-msg');
+        msg.innerText = currentPlayer === 1 ? "🌬️ 풍예 연맹 작전 시간" : "🤖 제국군 병력 이동 중";
+        msg.style.color = currentPlayer === 1 ? "#2ecc71" : "#e74c3c";
     }
 
     function startTimer() {
         if(isGameOver) return;
         clearInterval(timerInterval); turnTime = 10;
+        document.getElementById('timer-display').innerText = turnTime;
         timerInterval = setInterval(() => {
-            turnTime--; document.getElementById('timer-display').innerText = turnTime;
-            if(turnTime <= 0) { 
-                scores[currentPlayer] = Math.max(0, scores[currentPlayer]-15); 
-                playSound(150, 'sawtooth', 0.5); nextTurn(); 
+            turnTime--; 
+            document.getElementById('timer-display').innerText = turnTime;
+            if(turnTime <= 0) {
+                // 시간 초과 패널티
+                scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 50);
+                effects.push({x: canvas.width/2, y: 100, text: "시간 초과! 병력 -50억 손실", color: "#ff3e3e"});
+                updateUI();
+                nextTurn();
             }
         }, 1000);
     }
 
-    function isIntersecting(p1, p2, p3, p4) {
-        const cp = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-        return (((cp(p1,p2,p3)>0 && cp(p1,p2,p4)<0) || (cp(p1,p2,p3)<0 && cp(p1,p2,p4)>0)) && ((cp(p3,p4,p1)>0 && cp(p3,p4,p2)<0) || (cp(p3,p4,p1)<0 && cp(p3,p4,p2)>0)));
+    function canConnect(p1, p2) {
+        if(!p1 || !p2 || p1 === p2) return false;
+        if(lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
+        const isPass = points.some(p => {
+            if (p === p1 || p === p2) return false;
+            const d = Math.abs((p2.y - p1.y) * p.x - (p2.x - p1.x) * p.y + p2.x * p1.y - p2.y * p1.x) / Math.hypot(p2.y - p1.y, p2.x - p1.x);
+            const dot = (p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y);
+            return d < 8 && dot >= 0 && dot <= (Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+        });
+        if(isPass) return false;
+        const intersect = (a,b,c,d) => {
+            const cp = (p1,p2,p3) => (p2.x-p1.x)*(p3.y-p1.y)-(p2.y-p1.y)*(p3.x-p1.x);
+            const r1 = cp(a,b,c), r2 = cp(a,b,d), r3 = cp(c,d,a), r4 = cp(c,d,b);
+            return (((r1 > 0 && r2 < 0) || (r1 < 0 && r2 > 0)) && ((r3 > 0 && r4 < 0) || (r3 < 0 && r4 > 0)));
+        };
+        return !lines.some(l => intersect(p1, p2, l.p1, l.p2));
     }
 
     function attemptMove(p1, p2) {
-        if (p1.type !== 'none' || p2.type !== 'none' || lines.some(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1)) || lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return;
-        lines.push({p1, p2, player: currentPlayer});
-        playSound(440, 'sine', 0.1);
+        lines.push({p1, p2, player: currentPlayer}); 
+        playSound(); 
         let found = false;
         points.forEach(p3 => {
-            if(p3 === p1 || p3 === p2 || p3.type !== 'none') return;
-            const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
-            const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
-            if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
+            if(p3 === p1 || p3 === p2) return;
+            const hasL1 = lines.some(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
+            const hasL2 = lines.some(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
+            if(hasL1 && hasL2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
                 triangles.push({p1, p2, p3, player: currentPlayer});
-                let b = 20;
-                points.forEach(it => {
-                    if(it.type !== 'none' && isItIn(it, p1, p2, p3)) {
-                        b += (it.type === 'heart' ? 30 : -30);
-                        it.type = 'none';
-                    }
-                });
-                scores[currentPlayer] += b; found = true; playSound(880, 'square', 0.2);
-                effects.push({x: (p1.x+p2.x+p3.x)/3, y: (p1.y+p2.y+p3.y)/3, text: "+"+b, color: currentPlayer==1?"#2ecc71":"#e74c3c", alpha: 1.5});
+                let troopBonus = Math.floor(Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y)) / 100)) + 50; 
+                let cx = (p1.x+p2.x+p3.x)/3, cy = (p1.y+p2.y+p3.y)/3;
+                scores[currentPlayer] += troopBonus; found = true;
+                effects.push({x: cx, y: cy, text: fNum(troopBonus) + "억 명 충원", color: currentPlayer==1?"#2ecc71":"#e74c3c"});
             }
         });
-        if(Math.random() < 0.3) {
-            let ts = points.filter(p => p.type === 'none' && !p.isCore);
-            if(ts.length > 0) ts[Math.floor(Math.random()*ts.length)].type = Math.random() > 0.6 ? 'heart' : 'bomb';
-        }
         if(!found) nextTurn(); else startTimer();
         updateUI(); checkGameOver();
     }
 
-    function checkGameOver() {
-        let possible = false;
-        for(let i=0; i<points.length; i++) {
-            for(let j=i+1; j<points.length; j++) { if(canConnect(points[i], points[j])) { possible = true; break; } }
-            if(possible) break;
-        }
-        if(!possible) {
-            isGameOver = true; clearInterval(timerInterval);
-            if(scores[1] > (localStorage.getItem('poongye_highscore') || 0)) localStorage.setItem('poongye_highscore', scores[1]);
-            setTimeout(()=>location.reload(), 3000);
-        }
+    function nextTurn() { 
+        if(isGameOver) return;
+        currentPlayer = currentPlayer === 1 ? 2 : 1; 
+        if(currentPlayer === 1) skillCharge = Math.min(100, skillCharge + 20); 
+        updateTurnMsg(); startTimer(); updateUI(); 
+        if(currentPlayer === 2) setTimeout(aiThink, aiLevel); 
     }
 
-    function isItIn(p, a, b, c) {
-        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-1) + p3.x*(1-p2.y))/2);
-        const A = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y))/2);
-        return Math.abs(A(a,b,c) - (A(p,b,c)+A(a,p,c)+A(a,b,p))) < 1;
-    }
-
-    function nextTurn() { currentPlayer = (currentPlayer === 1) ? 2 : 1; startTimer(); updateUI(); if(currentPlayer === 2) setTimeout(ai, aiDelay); }
-    function ai() {
+    function aiThink() {
+        if(isGameOver || currentPlayer !== 2) return;
         let pss = [];
-        for(let i=0; i<points.length; i++) for(let j=i+1; j<points.length; j++) if(canConnect(points[i], points[j])) pss.push([points[i], points[j]]);
-        if(pss.length > 0) attemptMove(...pss[Math.floor(Math.random()*pss.length)]); else nextTurn();
-    }
-    function canConnect(p1, p2) {
-        if(p1.type!=='none'||p2.type!=='none'||p1===p2) return false;
-        if(lines.some(l=>(l.p1===p1&&l.p2===p2)||(l.p1===p2&&l.p2===p1))) return false;
-        return !lines.some(l=>isIntersecting(p1,p2,l.p1,l.p2));
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) {
+                if(canConnect(points[i], points[j])) {
+                    let createsTriangle = points.some(p3 => {
+                        if(p3 === points[i] || p3 === points[j]) return false;
+                        const hasL1 = lines.some(l => (l.p1===points[i] && l.p2===p3) || (l.p1===p3 && l.p2===points[i]));
+                        const hasL2 = lines.some(l => (l.p1===points[j] && l.p2===p3) || (l.p1===p3 && l.p2===points[j]));
+                        return hasL1 && hasL2;
+                    });
+                    pss.push({p1: points[i], p2: points[j], score: createsTriangle ? 2 : 1});
+                }
+            }
+        }
+        if(pss.length > 0) {
+            pss.sort((a, b) => b.score - a.score);
+            let topTier = pss.filter(p => p.score === pss[0].score);
+            let choice = topTier[Math.floor(Math.random()*topTier.length)];
+            aiAnim.startP = choice.p1; aiAnim.targetP = choice.p2;
+            aiAnim.progress = 0; aiAnim.active = true;
+        } else nextTurn();
     }
 
-    function updateUI() {
-        document.getElementById('s1').innerText = scores[1]; document.getElementById('s2').innerText = scores[2];
-        const msg = document.getElementById('mid-msg');
-        msg.innerText = currentPlayer === 1 ? "Poongye's Turn" : "Imperial Turn";
-        msg.style.color = currentPlayer === 1 ? "#2ecc71" : "#e74c3c";
+    function checkGameOver() {
+        let moves = 0;
+        for(let i=0; i<points.length; i++) for(let j=i+1; j<points.length; j++) if(canConnect(points[i], points[j])) moves++;
+        if(moves === 0 && gameStarted) {
+            isGameOver = true; clearInterval(timerInterval);
+            document.getElementById('final-score').innerHTML = `연맹 병력: ${fNum(scores[1])}억 명<br>제국 병력: ${fNum(scores[2])}억 명`;
+            document.getElementById('winner-text').innerText = scores[1] > scores[2] ? "승리! 행성을 탈환했습니다!" : "패배... 성계가 함락되었습니다.";
+            document.getElementById('result-screen').style.display = 'flex';
+        }
     }
+
+    function updateUI() { 
+        document.getElementById('s1').innerText = fNum(scores[1]); 
+        document.getElementById('s2').innerText = fNum(scores[2]); 
+        document.getElementById('skill-gauge').style.width = skillCharge + "%"; 
+    }
+
+    function toggleBGM() { const b = document.getElementById('bgm'); if(b.paused) b.play(); else b.pause(); }
 
     function drawLoop() {
-        // ⭐ 핵심 수정: 턴 전환 시 검게 변하는 현상 방지
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.clearRect(0,0,canvas.width,canvas.height);
+        if(!gameStarted) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        if(bgLoaded) ctx.drawImage(bgImg, 0, 0, canvas.width, canvas.height);
         
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)'; ctx.fill();
-            ctx.strokeStyle = t.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.stroke();
-            ctx.font = "20px Arial"; ctx.textAlign="center";
-            ctx.fillText(t.player === 1 ? "🛸" : "🛰️", (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3+7);
+            ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.4)' : 'rgba(231, 76, 60, 0.4)';
+            ctx.fill(); ctx.strokeStyle = t.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.stroke();
         });
+
+        if(isDragging && selectedPoint) {
+            ctx.beginPath(); ctx.moveTo(selectedPoint.x, selectedPoint.y); ctx.lineTo(mousePos.x, mousePos.y);
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.5)"; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+        }
+
+        if(aiAnim.active) {
+            aiAnim.progress += 0.05;
+            let cx = aiAnim.startP.x + (aiAnim.targetP.x - aiAnim.startP.x) * aiAnim.progress;
+            let cy = aiAnim.startP.y + (aiAnim.targetP.y - aiAnim.startP.y) * aiAnim.progress;
+            ctx.beginPath(); ctx.moveTo(aiAnim.startP.x, aiAnim.startP.y); ctx.lineTo(cx, cy);
+            ctx.strokeStyle = "rgba(231, 76, 60, 0.7)"; ctx.setLineDash([5, 5]); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+            if(aiAnim.progress >= 1) { aiAnim.active = false; attemptMove(aiAnim.startP, aiAnim.targetP); }
+        }
+
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
             ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
+
         points.forEach(p => {
-            ctx.save(); if(selectedPoint === p) { ctx.shadowBlur = 15; ctx.shadowColor="#fff"; }
-            ctx.font = p.isCore ? "35px Arial" : "28px Arial"; ctx.textAlign = "center";
-            ctx.fillText(p.isCore ? "☀️" : (p.type==='heart'?"💖":(p.type==='bomb'?"💣":"✨")), p.x, p.y+10); ctx.restore();
+            ctx.font = p.isCore ? "40px Arial" : "25px Arial"; ctx.textAlign = "center";
+            let icon = p.isCore ? "☀️" : "✨";
+            ctx.fillStyle = "white"; ctx.fillText(icon, p.x, p.y+10);
+            if(selectedPoint === p) { ctx.strokeStyle = "#00ffcc"; ctx.lineWidth = 2; ctx.strokeRect(p.x-22, p.y-22, 44, 44); }
         });
-        for(let i=effects.length-1; i>=0; i--) {
-            let e = effects[i]; ctx.globalAlpha = Math.min(1, e.alpha);
-            ctx.fillStyle = e.color; ctx.font = "bold 20px Arial"; ctx.textAlign="center";
-            ctx.fillText(e.text, e.x, e.y); e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
+
+        for(let i = effects.length - 1; i >= 0; i--) {
+            let e = effects[i]; ctx.fillStyle = e.color; ctx.font = "bold 18px Arial"; ctx.textAlign = "center";
+            ctx.fillText(e.text, e.x, e.y); e.y -= 1.2; if(e.y < 0) effects.splice(i, 1);
         }
-        if(!isGameOver) requestAnimationFrame(drawLoop);
+        requestAnimationFrame(drawLoop);
     }
 
-    const handleIn = (x, y) => {
-        if(currentPlayer !== 1 || isGameOver) return;
-        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 55);
-        if(p && p.type === 'none') {
-            if(!selectedPoint) selectedPoint = p;
-            else { attemptMove(selectedPoint, p); selectedPoint = null; }
-        } else selectedPoint = null;
-    };
-    canvas.addEventListener('mousedown', e => handleIn(e.clientX, e.clientY));
-    canvas.addEventListener('touchstart', e => { 
-        const touch = e.touches[0];
-        handleIn(touch.clientX, touch.clientY);
-    });
+    const hStart = (x, y) => { if(currentPlayer !== 1 || isGameOver || aiAnim.active) return; const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 40); if(p) { selectedPoint = p; isDragging = true; mousePos = {x, y}; } };
+    const hMove = (x, y) => { if(isDragging) mousePos = {x, y}; };
+    const hEnd = (x, y) => { if(!isDragging) return; const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 40); if(p && p !== selectedPoint && canConnect(selectedPoint, p)) attemptMove(selectedPoint, p); selectedPoint = null; isDragging = false; };
+
+    canvas.addEventListener('mousedown', e => hStart(e.clientX, e.clientY));
+    window.addEventListener('mousemove', e => hMove(e.clientX, e.clientY));
+    window.addEventListener('mouseup', e => hEnd(e.clientX, e.clientY));
+    canvas.addEventListener('touchstart', e => { hStart(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, {passive:false});
+    window.addEventListener('touchmove', e => hMove(e.touches[0].clientX, e.touches[0].clientY));
+    window.addEventListener('touchend', e => { const t = e.changedTouches[0]; hEnd(t.clientX, t.clientY); });
+    function useWindShift() { if(currentPlayer === 1 && skillCharge >= 100) { skillCharge = 0; effects.push({x: canvas.width/2, y: canvas.height/2, text: "시스템 과부하!!", color: "#00ffcc"}); updateUI(); } }
 </script>
 </body>
 </html>
