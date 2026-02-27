@@ -3,78 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 - 제국 vs 연맹 (v0.0.12)</title>
+    <title>우주전쟁 v0.0.13.2 - 함대 전면전</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
-        #game-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
-                        url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover;
-            z-index: 0;
-        }
+        #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; padding: 20px; box-sizing: border-box; }
-        .rule-card { background: rgba(10, 10, 25, 0.9); padding: 30px; border-radius: 20px; border: 2px solid #d4af37; max-width: 450px; line-height: 1.6; position: relative; box-shadow: 0 0 30px rgba(212, 175, 55, 0.4); }
-        .rule-list { text-align: left; display: inline-block; margin: 15px 0; font-size: 15px; color: #ecf0f1; }
-        h1 { font-size: 48px; color: #f1e5ac; text-shadow: 0 0 20px rgba(212, 175, 55, 0.8); margin-bottom: 20px; letter-spacing: 5px; }
-        h2 { color: #d4af37; margin-top: 0; }
-        .menu-btn { padding: 15px; margin: 8px; font-size: 18px; font-weight: bold; border: 2px solid #d4af37; background: transparent; color: #f1e5ac; border-radius: 5px; cursor: pointer; transition: 0.3s; width: 85%; max-width: 300px; }
-        .menu-btn:hover { background: #d4af37; color: black; box-shadow: 0 0 15px #d4af37; }
-        .version-tag { position: absolute; bottom: 10px; right: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.4); font-family: monospace; }
-        #ingame-ui { position: absolute; top: 20px; left: 0; width: 100%; pointer-events: none; display: none; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 50; }
-        .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; border-radius: 10px; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.2); }
-        .p1-ui { color: #2ecc71; border-color: #2ecc71; } 
-        .p2-ui { color: #e74c3c; border-color: #e74c3c; }
-        #mid-msg { font-size: 22px; font-weight: bold; text-shadow: 0 0 10px #000; }
-        #bgm-control { position: absolute; bottom: 20px; left: 20px; z-index: 200; background: rgba(0,0,0,0.6); padding: 10px; border-radius: 5px; border: 1px solid #d4af37; cursor: pointer; font-size: 14px; color: #f1e5ac; }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
+        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 25px; border-radius: 20px; border: 2px solid #3498db; max-width: 450px; box-shadow: 0 0 30px #3498db; }
+        .menu-btn { padding: 12px; margin: 10px; font-size: 18px; font-weight: bold; border: 2px solid #3498db; background: transparent; color: #fff; border-radius: 5px; cursor: pointer; transition: 0.3s; width: 220px; }
+        .menu-btn:hover { background: #3498db; box-shadow: 0 0 15px #3498db; }
+        #skill-container { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; display: none; }
+        #skill-bar-bg { width: 250px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 10px; border: 1px solid #00ffcc; overflow: hidden; margin-top: 5px; }
+        #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); transition: 0.3s; box-shadow: 0 0 10px #00ffcc; }
+        #ingame-ui { position: absolute; top: 20px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; }
+        .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.7); border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); }
     </style>
 </head>
 <body>
 
     <div id="game-bg"></div>
-    <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
-
     <div id="rule-screen" class="overlay">
-        <h1>🌌 우주전쟁</h1>
+        <h1>🌌 우주전쟁 v0.0.13.2</h1>
         <div class="rule-card">
-            <h2>📜 제국 vs 연맹 규칙</h2>
-            <ul class="rule-list">
-                <li>📐 삼각형 완성 시 <b>10점</b> + 추가 턴!</li>
-                <li>💣 <b>폭탄</b> 포함 땅: <b>-5점</b></li>
-                <li>💖 <b>하트</b> 포함 땅: <b>다음 턴 점수 2배!</b></li>
-                <li>⚡ <b>매 턴 마다</b> 무작위 아이템 보급!</li>
+            <h2>🛡️ 베리어 및 함대 활성화</h2>
+            <ul style="text-align:left; font-size:15px; color:#ecf0f1; line-height:1.8;">
+                <li>🛸 **연맹 함대:** 삼각형 완성 시 푸른 베리어와 함께 출현</li>
+                <li>🛰️ **제국 함대:** 적군 삼각형 완성 시 붉은 베리어 가동</li>
+                <li>🌪️ **바람의 기술:** 폭탄/하트를 비점령 지역으로 워프</li>
+                <li>✨ **별 선택:** 클릭 시 별의 에너지가 반전되며 발광</li>
             </ul>
-            <div class="version-tag">poongye v0.0.12</div>
         </div>
-        <button class="menu-btn" onclick="showDifficulty()">전장으로 진입하기</button>
-    </div>
-
-    <div id="difficulty-screen" class="overlay" style="display:none;">
-        <h1>작전 난이도</h1>
-        <button class="menu-btn" onclick="selectDifficulty('easy')">제국군 (EASY)</button>
-        <button class="menu-btn" style="border-color:#3498db; color:#3498db;" onclick="selectDifficulty('normal')">연맹군 (NORMAL)</button>
-        <button class="menu-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="selectDifficulty('hard')">최후의 전선 (HARD)</button>
-    </div>
-
-    <div id="count-screen" class="overlay" style="display:none;">
-        <h1>에너지 점 보급</h1>
-        <button class="menu-btn" style="border-color:#f1c40f; color:#f1c40f;" onclick="selectPointCount(10)">10개</button>
-        <button class="menu-btn" style="border-color:#f1c40f; color:#f1c40f;" onclick="selectPointCount(20)">20개</button>
-        <button class="menu-btn" style="border-color:#f1c40f; color:#f1c40f;" onclick="selectPointCount(30)">30개</button>
+        <button class="menu-btn" onclick="showGame()">전투 모드로 진입</button>
     </div>
 
     <div id="ingame-ui">
-        <div class="score-box p1-ui">USER: <span id="s1">0</span></div>
-        <div id="mid-msg"></div>
-        <div class="score-box p2-ui">AI: <span id="s2">0</span></div>
+        <div class="score-box" style="color:#2ecc71; text-shadow:0 0 10px #2ecc71;">연맹: <span id="s1">0</span></div>
+        <div id="mid-msg" style="font-weight:bold; font-size:24px;"></div>
+        <div class="score-box" style="color:#e74c3c; text-shadow:0 0 10px #e74c3c;">제국: <span id="s2">0</span></div>
     </div>
 
-    <div id="bgm-control" onclick="toggleBGM()">🎵 BGM: ON</div>
-
-    <div id="game-over-screen" class="overlay" style="display:none;">
-        <h1 id="winner-msg" style="color: #f1c40f;"></h1>
-        <div id="final-scores" style="font-size: 24px; margin: 20px 0;"></div>
-        <button class="menu-btn" onclick="location.reload()">다시 작전하기</button>
+    <div id="skill-container">
+        <div style="font-size:12px; color:#00ffcc; font-weight:bold;">🌪️ WIND GAUGE [S]</div>
+        <div id="skill-bar-bg"><div id="skill-bar"></div></div>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -82,103 +52,83 @@
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let audioCtx, bgm = document.getElementById('bgm'), isBGMOn = true;
-    
-    const bombImg = new Image();
-    bombImg.src = 'data:image/svg+xml;base64,' + btoa('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="11" cy="13" r="8" fill="#c0392b" stroke="#000" stroke-width="2"/><path d="M14 6L16 4" stroke="#f1c40f" stroke-width="2" stroke-linecap="round"/><circle cx="18" cy="4" r="2" fill="#f1c40f"/></svg>');
-    const heartImg = new Image();
-    heartImg.src = 'data:image/svg+xml;base64,' + btoa('<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill="#ff69b4" stroke="#fff" stroke-width="1"/></svg>');
-
-    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    function playTone(f, t, d, v=0.2) { if(!audioCtx) return; const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type=t; o.frequency.setValueAtTime(f, audioCtx.currentTime); g.gain.setValueAtTime(v, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+d); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+d); }
-    function playExplosion() { if(!audioCtx) return; const o=audioCtx.createOscillator(), g=audioCtx.createGain(); o.type='square'; o.frequency.setValueAtTime(80, audioCtx.currentTime); o.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime+0.4); g.gain.setValueAtTime(0.4, audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime+0.4); o.connect(g); g.connect(audioCtx.destination); o.start(); o.stop(audioCtx.currentTime+0.4); }
-
-    let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=0, scores={1:0, 2:0}, isGameOver=false, effects=[], doubleScore={1:false, 2:false}, itemTimer=null, aiLevel;
-    let itemSpawnedInTurn = false; // 한 턴에 하나만 생성되도록 체크하는 변수
+    let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=0, scores={1:0, 2:0}, isGameOver=false;
+    let doubleScore={1:false, 2:false}, skillGauge=0, itemSpawnedInTurn=false, effects=[], frame = 0;
 
     function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    function showDifficulty() { initAudio(); document.getElementById('rule-screen').style.display='none'; document.getElementById('difficulty-screen').style.display='flex'; }
-    function selectDifficulty(l) { aiLevel=l; if(isBGMOn) bgm.play(); document.getElementById('difficulty-screen').style.display='none'; document.getElementById('count-screen').style.display='flex'; }
-    function selectPointCount(c) { document.getElementById('count-screen').style.display='none'; startGame(c); }
+    function showGame() {
+        document.getElementById('rule-screen').style.display='none';
+        document.getElementById('ingame-ui').style.display='flex';
+        document.getElementById('skill-container').style.display='block';
+        startGame(22);
+    }
 
     function startGame(count) {
-        document.getElementById('ingame-ui').style.display='flex';
-        currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; doubleScore={1:false, 2:false}; effects=[];
-        itemSpawnedInTurn = false;
-
-        for(let i=0; i<count; i++) {
-            spawnInitialPoint();
-        }
-        
-        if(itemTimer) clearInterval(itemTimer);
-        itemTimer = setInterval(spawnDynamicItem, 4000); 
+        currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; skillGauge=0;
+        points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
+        for(let i=0; i<count-1; i++) spawnStar(false);
+        setInterval(() => { if(!isGameOver && !itemSpawnedInTurn) { spawnStar(true); itemSpawnedInTurn=true; } }, 5000);
         updateUI(); drawLoop();
     }
 
-    function spawnInitialPoint() {
-        let nx, ny, tooClose;
+    function spawnStar(isItem) {
+        let nx, ny, tooClose, attempts = 0;
         do {
-            nx = Math.random()*(canvas.width-200)+100;
-            ny = Math.random()*(canvas.height-200)+100;
-            tooClose = points.some(p => Math.hypot(p.x-nx, p.y-ny) < 60);
-        } while(tooClose);
-        
-        let r = Math.random();
-        points.push({ x:nx, y:ny, isBomb: r<0.15, isHeart: r>0.93 });
-    }
-
-    function isPointInTriangle(p, t) {
-        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-1-p3.y) + p3.x*(p1.y-p2.y))/2);
-        let A = area(t.p1, t.p2, t.p3), A1 = area(p, t.p1, t.p2), A2 = area(p, t.p2, t.p3), A3 = area(p, t.p3, t.p1);
-        return Math.abs(A - (A1 + A2 + A3)) < 1.0;
-    }
-
-    function spawnDynamicItem() {
-        if(isGameOver || itemSpawnedInTurn) return; // 이미 생성되었으면 통과
-        
-        let nx, ny, tooClose, inTri;
-        let attempts = 0;
-        do {
-            nx = Math.random()*(canvas.width-200)+100;
-            ny = Math.random()*(canvas.height-200)+100;
+            nx = Math.random()*(canvas.width-200)+100; ny = Math.random()*(canvas.height-200)+100;
             tooClose = points.some(p => Math.hypot(p.x-nx, p.y-ny) < 70);
-            inTri = triangles.some(t => isPointInTriangle({x:nx, y:ny}, t));
             attempts++;
-        } while((tooClose || inTri) && attempts < 20);
-
-        if(attempts >= 20) return;
-
-        itemSpawnedInTurn = true; // 아이템 생성 예약됨
-        const isHeart = Math.random() < 0.25;
-        addEffect(isHeart ? "💖 보급품 투하!" : "⚠️ 기뢰 매설!", isHeart ? "#ff69b4" : "#ff3f34");
-        playTone(isHeart ? 1000 : 200, 'sine', 0.2, 0.1);
-        
-        setTimeout(() => {
-            if(isGameOver) return;
-            points.push({ x:nx, y:ny, isBomb: !isHeart, isHeart: isHeart });
-            playTone(isHeart ? 1200 : 150, 'sine', 0.3, 0.2);
-        }, 1200);
+        } while(tooClose && attempts < 50);
+        if(attempts < 50) {
+            let r = Math.random();
+            points.push({ x: nx, y: ny, isCore: false, isBomb: isItem ? r < 0.5 : r < 0.1, isHeart: isItem ? r >= 0.5 : r > 0.92 });
+        }
     }
 
-    function handleInput(x, y) {
-        if(currentPlayer!==1 || isGameOver) return;
-        const p = points.find(pt => Math.hypot(pt.x-x, pt.y-y) < 35);
-        if(p && !selectedPoint) { selectedPoint=p; playTone(440, 'sine', 0.1); }
-        else if(p && selectedPoint && p!==selectedPoint) {
-            if(canConnect(selectedPoint, p)) { attemptMove(selectedPoint, p); selectedPoint=null; }
-            else { selectedPoint=null; playTone(150, 'sawtooth', 0.2); }
-        } else { selectedPoint=null; }
+    function isInsideAnyTriangle(px, py) {
+        const getArea = (x1, y1, x2, y2, x3, y3) => Math.abs((x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2))/2);
+        return triangles.some(t => {
+            let A = getArea(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
+            let A1 = getArea(px, py, t.p1.x, t.p1.y, t.p2.x, t.p2.y);
+            let A2 = getArea(px, py, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
+            let A3 = getArea(px, py, t.p3.x, t.p3.y, t.p1.x, t.p1.y);
+            return Math.abs(A - (A1 + A2 + A3)) < 1.0;
+        });
+    }
+
+    window.addEventListener('keydown', (e) => {
+        if(e.key.toLowerCase() === 's' && skillGauge >= 100 && currentPlayer === 1) {
+            skillGauge = 0;
+            points.forEach(p => {
+                if(p.isBomb || p.isHeart) {
+                    let nx, ny, safe, att = 0;
+                    do {
+                        nx = Math.random()*(canvas.width-200)+100; ny = Math.random()*(canvas.height-200)+100;
+                        safe = !isInsideAnyTriangle(nx, ny); att++;
+                    } while(!safe && att < 30);
+                    p.x = nx; p.y = ny;
+                }
+            });
+            addEffect("🌪️ WIND SHUFFLE!", "#00ffcc"); updateUI();
+        }
+    });
+
+    function isIntersecting(p1,p2,p3,p4) {
+        const cp=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
+        return (((cp(p3,p4,p1)>0 && cp(p3,p4,p2)<0)||(cp(p3,p4,p1)<0 && cp(p3,p4,p2)>0))&&((cp(p1,p2,p3)>0 && cp(p1,p2,p4)<0)||(cp(p1,p2,p3)<0 && cp(p1,p2,p4)>0)));
     }
 
     function canConnect(p1, p2) {
+        if(p1 === p2) return false;
         if(lines.some(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1))) return false;
         if(lines.some(l => isIntersecting(p1,p2,l.p1,l.p2))) return false;
-        return !points.some(p => { if(p===p1||p===p2) return false; return Math.abs(Math.hypot(p2.x-p1.x, p2.y-p1.y)-(Math.hypot(p.x-p1.x, p.y-p1.y)+Math.hypot(p.x-p2.x, p.y-p2.y))) < 1.0; });
+        return !points.some(p => {
+            if(p===p1||p===p2) return false;
+            let d = Math.hypot(p2.x-p1.x, p2.y-p1.y), d1 = Math.hypot(p.x-p1.x, p.y-p1.y), d2 = Math.hypot(p.x-p2.x, p.y-p2.y);
+            return Math.abs(d - (d1+d2)) < 0.5;
+        });
     }
-    
-    function isIntersecting(p1,p2,p3,p4) { const cp=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x); return (((cp(p3,p4,p1)>0 && cp(p3,p4,p2)<0)||(cp(p3,p4,p1)<0 && cp(p3,p4,p2)>0))&&((cp(p1,p2,p3)>0 && cp(p1,p2,p4)<0)||(cp(p1,p2,p3)<0 && cp(p1,p2,p4)>0))); }
 
     function attemptMove(p1, p2) {
         lines.push({p1, p2, player:currentPlayer});
@@ -188,32 +138,22 @@
             const l1 = lines.find(ln => (ln.p1===p1 && ln.p2===p3)||(ln.p1===p3 && ln.p2===p1));
             const l2 = lines.find(ln => (ln.p1===p2 && ln.p2===p3)||(ln.p1===p3 && ln.p2===p2));
             if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
-                let tri = {p1, p2, p3, player:currentPlayer, isBomb:(p1.isBomb||p2.isBomb||p3.isBomb), isHeart:(p1.isHeart||p2.isHeart||p3.isHeart)};
-                triangles.push(tri); newTris.push(tri);
+                newTris.push({p1, p2, p3, player:currentPlayer, isBomb:(p1.isBomb||p2.isBomb||p3.isBomb), isHeart:(p1.isHeart||p2.isHeart||p3.isHeart), isCore:(p1.isCore||p2.isCore||p3.isCore), anim: 0});
             }
         });
-
         if(newTris.length > 0) {
-            let mult = doubleScore[currentPlayer] ? 2 : 1;
-            let turnSum = 0, gotHeart = false;
+            let mult = doubleScore[currentPlayer] ? 2 : 1, gotHeart = false;
             newTris.forEach(t => {
-                if(t.isBomb) { turnSum -= 5; playExplosion(); addEffect("-5 💣 피격!", "#e74c3c"); }
-                else if(t.isHeart) { turnSum += (10*mult); gotHeart = true; playTone(1200,'sine',0.3); addEffect("💖 DOUBLE SCORE!", "#ff69b4"); }
-                else { turnSum += (10*mult); playTone(880,'sine',0.2); addEffect("+"+(10*mult), "#f1c40f"); }
+                triangles.push(t);
+                if(t.isBomb) { scores[currentPlayer] -= 5; addEffect("💣 BOOM!", "#ff3f34"); }
+                else { let base = t.isCore ? 30 : 10; scores[currentPlayer] += (base * mult); addEffect(`+${base*mult}${t.isCore?' ☀️':''}`, t.player===1?"#2ecc71":"#e74c3c"); }
+                if(t.isHeart) gotHeart = true;
+                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 25);
             });
-            scores[currentPlayer] += turnSum;
-            doubleScore[currentPlayer] = gotHeart;
-            updateUI(); 
-            if(checkGameOver()) return;
-            // 점수를 얻었으면 턴이 유지되므로 아이템 생성 체크 유지
-            if(currentPlayer === 2) setTimeout(aiMove, 800);
+            doubleScore[currentPlayer] = gotHeart; updateUI(); if(currentPlayer === 2) setTimeout(aiMove, 800);
         } else {
-            // 턴이 넘어감
-            doubleScore[currentPlayer] = false;
-            currentPlayer = currentPlayer===1 ? 2 : 1;
-            itemSpawnedInTurn = false; // 턴이 바뀌었으므로 다음 아이템 생성 가능
-            updateUI(); 
-            if(currentPlayer===2) setTimeout(aiMove, 800);
+            doubleScore[currentPlayer] = false; currentPlayer = currentPlayer===1 ? 2 : 1;
+            itemSpawnedInTurn = false; updateUI(); if(currentPlayer===2) setTimeout(aiMove, 800);
         }
     }
 
@@ -221,71 +161,89 @@
         if(isGameOver || currentPlayer !== 2) return;
         let moves = [];
         points.forEach((p1,i) => points.slice(i+1).forEach(p2 => { if(canConnect(p1,p2)) moves.push({p1,p2}); }));
-        
         if(moves.length > 0) {
-            let scoring = moves.filter(m => {
-                return points.some(p3 => {
-                    if(p3===m.p1 || p3===m.p2) return false;
-                    const l1 = lines.some(ln => (ln.p1===m.p1 && ln.p2===p3)||(ln.p1===p3 && ln.p2===m.p1));
-                    const l2 = lines.some(ln => (ln.p1===m.p2 && ln.p2===p3)||(ln.p1===p3 && ln.p2===m.p2));
-                    return l1 && l2;
-                });
-            });
-            let best = (scoring.length > 0 && aiLevel!=='easy') ? scoring[Math.floor(Math.random()*scoring.length)] : moves[Math.floor(Math.random()*moves.length)];
-            attemptMove(best.p1, best.p2);
-        } else { checkGameOver(true); }
+            let scoring = moves.filter(m => points.some(p3 => {
+                if(p3===m.p1 || p3===m.p2) return false;
+                const l1 = lines.some(ln => (ln.p1===m.p1 && ln.p2===p3)||(ln.p1===p3 && ln.p2===m.p1));
+                const l2 = lines.some(ln => (ln.p1===m.p2 && ln.p2===p3)||(ln.p1===p3 && ln.p2===m.p2));
+                return l1 && l2;
+            }));
+            let target = scoring.length > 0 ? scoring[Math.floor(Math.random()*scoring.length)] : moves[Math.floor(Math.random()*moves.length)];
+            attemptMove(target.p1, target.p2);
+        }
     }
 
-    function checkGameOver(f=false) {
-        if(f || !points.some((p1,i)=>points.slice(i+1).some(p2=>canConnect(p1,p2)))) {
-            isGameOver=true; if(itemTimer) clearInterval(itemTimer);
-            document.getElementById('winner-msg').innerText = scores[1]>scores[2] ? "연맹의 승리입니다!" : "제국의 승리입니다!";
-            document.getElementById('final-scores').innerText = `USER: ${scores[1]} | AI: ${scores[2]}`;
-            document.getElementById('game-over-screen').style.display='flex';
-            return true;
-        } return false;
-    }
-
+    function addEffect(t, c) { effects.push({x:canvas.width/2, y:canvas.height/2, t, c, a:1}); }
     function updateUI() {
-        document.getElementById('s1').innerText = scores[1];
-        document.getElementById('s2').innerText = scores[2];
-        const m = document.getElementById('mid-msg');
-        m.innerText = (doubleScore[currentPlayer]?"💖 ":"") + (currentPlayer===1?"MY TURN":"AI TURN");
-        m.style.color = currentPlayer===1?"#2ecc71":"#e74c3c";
+        document.getElementById('s1').innerText = scores[1]; document.getElementById('s2').innerText = scores[2];
+        document.getElementById('skill-bar').style.width = skillGauge + "%";
+        const m = document.getElementById('mid-msg'); m.innerText = (doubleScore[currentPlayer]?"💖 ":"") + (currentPlayer===1?"MY TURN":"AI TURN"); m.style.color = currentPlayer===1?"#2ecc71":"#e74c3c";
     }
-
-    function addEffect(t, c) { effects.push({x:canvas.width/2, y:canvas.height/2, t, c, a:1, l:60}); }
 
     function drawLoop() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+        frame++;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        
+        // 1. 삼각형 & 베리어 이펙트
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player===1 ? 'rgba(46,204,113,0.3)' : 'rgba(231,76,60,0.3)'; ctx.fill();
+            
+            // 베리어 내부 에너지 흐름 효과
+            let grad = ctx.createRadialGradient((t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3, 0, (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3, 100);
+            let color = t.player === 1 ? '46, 204, 113' : '231, 76, 60';
+            grad.addColorStop(0, `rgba(${color}, 0.2)`);
+            grad.addColorStop(1, `rgba(${color}, 0.05)`);
+            ctx.fillStyle = grad; ctx.fill();
+
+            // 베리어 테두리 발광
+            ctx.strokeStyle = `rgba(${color}, ${0.5 + Math.sin(frame*0.1)*0.2})`;
+            ctx.lineWidth = 3; ctx.stroke();
+            
+            // 함대 배치 애니메이션
+            if(t.anim < 1) t.anim += 0.05;
+            let cx = (t.p1.x+t.p2.x+t.p3.x)/3, cy = (t.p1.y+t.p2.y+t.p3.y)/3;
+            ctx.save();
+            ctx.translate(cx, cy);
+            ctx.scale(t.anim, t.anim);
+            ctx.font = "40px Arial";
+            ctx.shadowBlur = 15; ctx.shadowColor = t.player === 1 ? "#2ecc71" : "#e74c3c";
+            ctx.fillText(t.player===1 ? "🛸" : "🛰️", -20, 15);
+            ctx.restore();
         });
+
+        // 2. 선 그리기
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
-            ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth=3; ctx.stroke();
+            ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
+
+        // 3. 별 그리기 및 반전 효과
         points.forEach(p => {
-            if(p.isBomb) ctx.drawImage(bombImg, p.x-12, p.y-12, 24, 24);
-            else if(p.isHeart) { ctx.shadowColor='#ff69b4'; ctx.shadowBlur=10; ctx.drawImage(heartImg, p.x-12, p.y-12, 24, 24); ctx.shadowBlur=0; }
-            else {
-                ctx.beginPath(); ctx.arc(p.x,p.y,6,0,Math.PI*2);
-                ctx.fillStyle = (selectedPoint===p) ? '#fff' : '#d4af37'; ctx.fill();
-                ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+            ctx.save();
+            if(selectedPoint === p) {
+                ctx.filter = "invert(1) brightness(2) drop-shadow(0 0 10px white)";
             }
+            ctx.font = p.isCore ? "45px Arial" : "30px Arial";
+            ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), p.x-15, p.y+15);
+            ctx.restore();
         });
+
+        // 4. 이펙트
         effects.forEach((e,i) => {
             ctx.globalAlpha=e.a; ctx.fillStyle=e.c; ctx.font="bold 30px Arial"; ctx.textAlign="center";
-            ctx.fillText(e.t, e.x, e.y); e.y-=1; e.a-=0.02; if(e.a<=0) effects.splice(i,1);
+            ctx.fillText(e.t, e.x, e.y); e.y-=1; e.a-=0.015; if(e.a<=0) effects.splice(i,1);
         });
-        ctx.globalAlpha=1;
+        ctx.globalAlpha=1; ctx.textAlign="left";
         if(!isGameOver) requestAnimationFrame(drawLoop);
     }
 
-    canvas.addEventListener('mousedown', e => handleInput(e.clientX, e.clientY));
-    canvas.addEventListener('touchstart', e => handleInput(e.touches[0].clientX, e.touches[0].clientY), {passive:true});
-    function toggleBGM() { isBGMOn=!isBGMOn; isBGMOn?bgm.play():bgm.pause(); document.getElementById('bgm-control').innerText="🎵 BGM: "+(isBGMOn?"ON":"OFF"); }
+    canvas.addEventListener('mousedown', e => {
+        const p = points.find(pt => Math.hypot(pt.x-e.clientX, pt.y-e.clientY) < 35);
+        if(p && currentPlayer===1) {
+            if(!selectedPoint) { selectedPoint = p; }
+            else { if(canConnect(selectedPoint, p)) attemptMove(selectedPoint, p); selectedPoint = null; }
+        } else { selectedPoint = null; }
+    });
 </script>
 </body>
 </html>
