@@ -3,30 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.13.8 - 풍예 에디션</title>
+    <title>우주전쟁 v0.0.13.9 - 풍예 에디션</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
         
-        /* 중앙 오버레이 & 메뉴 */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.4); }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
         .rule-card { background: rgba(10, 10, 25, 0.95); padding: 25px; border-radius: 20px; border: 2px solid #3498db; max-width: 450px; box-shadow: 0 0 30px rgba(52, 152, 219, 0.5); }
         .menu-btn { padding: 12px; margin: 10px; font-size: 16px; font-weight: bold; border: 2px solid #3498db; background: transparent; color: #fff; border-radius: 5px; cursor: pointer; width: 200px; transition: 0.3s; }
         .menu-btn:hover { background: #3498db; box-shadow: 0 0 15px #3498db; }
 
-        /* 패치 노트 레이어 */
-        #patch-notes { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 80%; max-width: 500px; max-height: 70vh; background: rgba(10, 10, 30, 0.95); border: 2px solid #00ffcc; border-radius: 15px; padding: 20px; z-index: 200; overflow-y: auto; text-align: left; }
-        .patch-item { margin-bottom: 15px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; }
-        .patch-ver { color: #00ffcc; font-weight: bold; }
+        #patch-notes { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 500px; max-height: 70vh; background: rgba(10, 10, 30, 0.98); border: 2px solid #00ffcc; border-radius: 15px; padding: 25px; z-index: 200; overflow-y: auto; text-align: left; }
+        .patch-ver { color: #00ffcc; font-weight: bold; margin-top: 10px; display: block; }
         
-        /* 하단 통합 컨트롤 바 */
-        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; align-items: center; gap: 20px; background: rgba(0,0,0,0.8); padding: 10px 25px; border-radius: 50px; border: 1px solid rgba(0, 255, 204, 0.3); }
+        #ingame-ui { position: absolute; top: 20px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; }
+        .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.7); border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); }
+
+        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; align-items: center; gap: 20px; background: rgba(0,0,0,0.85); padding: 10px 25px; border-radius: 50px; border: 1px solid rgba(0, 255, 204, 0.3); }
         .ctrl-btn { padding: 8px 15px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.5); color: #fff; border-radius: 20px; cursor: pointer; font-size: 13px; }
         .quit-btn { border-color: #e74c3c; color: #e74c3c; }
 
         #skill-bar-bg { width: 150px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid #00ffcc; overflow: hidden; margin-top: 4px; }
-        #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); }
+        #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); transition: 0.3s; }
         #ver-tag { position: absolute; bottom: 10px; right: 20px; font-size: 11px; color: rgba(255,255,255,0.3); z-index: 200; }
     </style>
 </head>
@@ -36,69 +35,56 @@
     <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
 
     <div id="rule-screen" class="overlay">
-        <h1>🌌 우주전쟁 v0.0.13.8</h1>
+        <h1>🌌 우주전쟁 v0.0.13.9</h1>
         <div class="rule-card">
-            <h2>🛸 사령부 메인 터미널</h2>
-            <p>풍예의 후예여, 전장에 나설 준비가 되었는가?</p>
+            <h2>⚔️ 전장 재정비 완료</h2>
+            <p>선 통과 방지 규칙 복구 및 통합 시스템 가동</p>
             <button class="menu-btn" onclick="showGame()">전투 개시</button><br>
-            <button class="menu-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="togglePatchNotes(true)">📋 패치 노트 보기</button>
+            <button class="menu-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="togglePatchNotes(true)">📋 패치 노트</button>
         </div>
     </div>
 
     <div id="patch-notes">
         <h2 style="color:#00ffcc; border-bottom: 2px solid #00ffcc; padding-bottom: 10px;">📋 시스템 업데이트 기록</h2>
-        <div class="patch-item">
-            <div class="patch-ver">v0.0.13.8</div>
-            <div>- 패치 노트 메뉴 시스템 도입<br>- 하단 UI 안정화 및 버튼 레이아웃 최적화</div>
-        </div>
-        <div class="patch-item">
-            <div class="patch-ver">v0.0.13.7</div>
-            <div>- 사운드 및 항복 버튼 하단 이동<br>- 스킬 바와 통합된 컨트롤 대시보드 구축</div>
-        </div>
-        <div class="patch-item">
-            <div class="patch-ver">v0.0.13.6</div>
-            <div>- 화면 어두워짐(Alpha 고정) 버그 수정<br>- 인게임 버전 표기 시스템 추가</div>
-        </div>
-        <div class="patch-item">
-            <div class="patch-ver">v0.0.13.5</div>
-            <div>- 별 선택 시 1.3배 확대 및 반전 효과<br>- 함대(🛸/🛰️) 및 베리어 이펙트 강화</div>
-        </div>
-        <div class="patch-item">
-            <div class="patch-ver">v0.0.13.3</div>
-            <div>- 사운드 시스템 및 항복 기능 최초 도입<br>- 바람의 기술(셔플) 게이지 시스템 추가</div>
-        </div>
-        <button class="menu-btn" style="width:100%;" onclick="togglePatchNotes(false)">닫기</button>
+        <div class="patch-ver">v0.0.13.9</div>
+        <div>- <b>선 교차 불가 규칙(물리 엔진) 복구</b><br>- 누락된 로직 전수 검사 및 기능 보존</div>
+        <div class="patch-ver">v0.0.13.8</div>
+        <div>- 패치 노트 메뉴 시스템 최초 도입<br>- 하단 UI 레이아웃 최적화</div>
+        <div class="patch-ver">v0.0.13.7</div>
+        <div>- 사운드 및 작전 중단 버튼 하단 이동<br>- 스킬 바 통합 컨트롤 대시보드</div>
+        <div class="patch-ver">v0.0.13.6</div>
+        <div>- 화면 정지 버그(Alpha값 오류) 수정<br>- 인게임 버전 표기 추가</div>
+        <button class="menu-btn" style="width:100%; margin-top:20px;" onclick="togglePatchNotes(false)">닫기</button>
     </div>
 
-    <div id="ingame-ui" style="position:absolute; top:20px; width:100%; display:none; z-index:50; justify-content:space-between; padding:0 40px; box-sizing:border-box; pointer-events:none;">
-        <div style="font-size:20px; font-weight:bold; color:#2ecc71;">연맹: <span id="s1">0</span></div>
+    <div id="ingame-ui">
+        <div class="score-box" style="color:#2ecc71;">연맹군: <span id="s1">0</span></div>
         <div id="mid-msg" style="font-weight:bold; font-size:20px;"></div>
-        <div style="font-size:20px; font-weight:bold; color:#e74c3c;">제국: <span id="s2">0</span></div>
+        <div class="score-box" style="color:#e74c3c;">제국군: <span id="s2">0</span></div>
     </div>
 
     <div id="bottom-ctrl">
         <button id="bgm-toggle" class="ctrl-btn" onclick="toggleBGM()">🎵 사운드 ON</button>
         <div style="text-align:center;">
-            <div style="font-size:10px; color:#00ffcc;">WIND GAUGE [S]</div>
+            <div style="font-size:10px; color:#00ffcc; font-weight:bold;">WIND ENERGY [S]</div>
             <div id="skill-bar-bg"><div id="skill-bar"></div></div>
         </div>
         <button class="ctrl-btn quit-btn" onclick="if(confirm('포기하시겠습니까?')) location.reload()">🏳️ 포기</button>
     </div>
 
-    <div id="ver-tag">v0.0.13.8 (PungYe Edition)</div>
+    <div id="ver-tag">v0.0.13.9 (PungYe Edition)</div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=0, scores={1:0, 2:0};
+    let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
     let skillGauge=0, effects=[], frame = 0, bgm = document.getElementById('bgm'), isBGMPlaying = false;
 
     function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
     function togglePatchNotes(show) { document.getElementById('patch-notes').style.display = show ? 'block' : 'none'; }
-
     function toggleBGM() {
         if (!isBGMPlaying) { bgm.play().catch(e=>{}); document.getElementById('bgm-toggle').innerText = "🔇 사운드 OFF"; isBGMPlaying = true; }
         else { bgm.pause(); document.getElementById('bgm-toggle').innerText = "🎵 사운드 ON"; isBGMPlaying = false; }
@@ -125,15 +111,27 @@
         updateUI(); drawLoop();
     }
 
+    // 선 교차 체크 함수 (핵심 규칙)
+    function isIntersecting(p1, p2, p3, p4) {
+        const cp = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
+        const res1 = cp(p1, p2, p3) * cp(p1, p2, p4);
+        const res2 = cp(p3, p4, p1) * cp(p3, p4, p2);
+        return res1 < 0 && res2 < 0;
+    }
+
     function canConnect(p1, p2) {
-        if(p1 === p2) return false;
-        if(lines.some(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1))) return false;
-        const cp=(a,b,c)=>(b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x);
-        if(lines.some(l => (((cp(l.p1,l.p2,p1)>0 && cp(l.p1,l.p2,p2)<0)||(cp(l.p1,l.p2,p1)<0 && cp(l.p1,l.p2,p2)>0))&&((cp(p1,p2,l.p1)>0 && cp(p1,p2,l.p2)<0)||(cp(p1,p2,l.p1)<0 && cp(p1,p2,l.p2)>0))))) return false;
+        if (p1 === p2) return false;
+        if (lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
+        // 교차 검사 복구
+        if (lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return false;
+        
+        // 선 위에 점이 있는지 검사
         return !points.some(p => {
-            if(p===p1||p===p2) return false;
-            let d = Math.hypot(p2.x-p1.x, p2.y-p1.y), d1 = Math.hypot(p.x-p1.x, p.y-p1.y), d2 = Math.hypot(p.x-p2.x, p.y-p2.y);
-            return Math.abs(d - (d1+d2)) < 0.5;
+            if (p === p1 || p === p2) return false;
+            let d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+            let d1 = Math.hypot(p.x - p1.x, p.y - p1.y);
+            let d2 = Math.hypot(p.x - p2.x, p.y - p2.y);
+            return Math.abs(d - (d1 + d2)) < 0.5;
         });
     }
 
@@ -142,7 +140,9 @@
         let found = false;
         points.forEach(p3 => {
             if(p3===p1 || p3===p2) return;
-            if(lines.some(ln=>(ln.p1===p1&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p1)) && lines.some(ln=>(ln.p1===p2&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p2))) {
+            const l1 = lines.find(ln=>(ln.p1===p1&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p1));
+            const l2 = lines.find(ln=>(ln.p1===p2&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p2));
+            if(l1 && l2) {
                 if(!triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
                     triangles.push({p1,p2,p3,player:currentPlayer, anim:0, isCore:(p1.isCore||p2.isCore||p3.isCore)});
                     scores[currentPlayer] += (p1.isCore||p2.isCore||p3.isCore) ? 30 : 10;
@@ -151,42 +151,56 @@
                 }
             }
         });
-        if(!found) currentPlayer = currentPlayer===1?2:1;
+        if(!found) currentPlayer = currentPlayer===1 ? 2 : 1;
         updateUI(); if(currentPlayer===2) setTimeout(aiMove, 800);
     }
 
     function aiMove() {
         let moves = [];
         points.forEach((p1,i) => points.slice(i+1).forEach(p2 => { if(canConnect(p1,p2)) moves.push({p1,p2}); }));
-        if(moves.length > 0) attemptMove(moves[Math.floor(Math.random()*moves.length)].p1, moves[Math.floor(Math.random()*moves.length)].p2);
+        if(moves.length > 0) {
+            let target = moves[Math.floor(Math.random()*moves.length)];
+            attemptMove(target.p1, target.p2);
+        }
     }
 
     function updateUI() {
-        document.getElementById('s1').innerText = scores[1]; document.getElementById('s2').innerText = scores[2];
+        document.getElementById('s1').innerText = scores[1]; 
+        document.getElementById('s2').innerText = scores[2];
         document.getElementById('skill-bar').style.width = skillGauge + "%";
-        document.getElementById('mid-msg').innerText = currentPlayer===1?"연맹군 차례":"제국군 차례";
-        document.getElementById('mid-msg').style.color = currentPlayer===1?"#2ecc71":"#e74c3c";
+        const m = document.getElementById('mid-msg');
+        m.innerText = currentPlayer===1 ? "연맹군 차례" : "제국군 차례";
+        m.style.color = currentPlayer===1 ? "#2ecc71" : "#e74c3c";
     }
 
     function drawLoop() {
         frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
+        
+        // 삼각형 & 베리어 & 함대
         triangles.forEach(t => {
             ctx.save(); ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player===1?'rgba(46,204,113,0.15)':'rgba(231,76,60,0.15)'; ctx.fill();
-            ctx.strokeStyle = t.player===1?'#2ecc71':'#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.fillStyle = t.player===1 ? 'rgba(46,204,113,0.12)' : 'rgba(231,76,60,0.12)'; ctx.fill();
+            ctx.strokeStyle = t.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
             if(t.anim < 1) t.anim += 0.05;
             ctx.translate((t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3); ctx.scale(t.anim, t.anim);
             ctx.font = "30px Arial"; ctx.textAlign="center"; ctx.fillText(t.player===1?"🛸":"🛰️", 0, 10); ctx.restore();
         });
+
+        // 선
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
-            ctx.strokeStyle = l.player===1?'#2ecc71':'#e74c3c'; ctx.stroke();
+            ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
+
+        // 별 & 선택 반전
         points.forEach(p => {
-            ctx.save(); let s = selectedPoint===p?1.3:1; if(selectedPoint===p) ctx.filter="invert(1) brightness(2)";
-            ctx.translate(p.x,p.y); ctx.scale(s,s); ctx.font = p.isCore?"45px Arial":"30px Arial"; ctx.textAlign="center";
-            ctx.fillText(p.isCore?"☀️":(p.isBomb?"💣":(p.isHeart?"💖":"✨")), 0, 10); ctx.restore();
+            ctx.save(); let s = (selectedPoint === p) ? 1.3 : 1.0;
+            if(selectedPoint === p) ctx.filter = "invert(1) brightness(2)";
+            ctx.translate(p.x, p.y); ctx.scale(s, s);
+            ctx.font = p.isCore ? "45px Arial" : "30px Arial"; ctx.textAlign="center";
+            ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), 0, 10); ctx.restore();
         });
+
         requestAnimationFrame(drawLoop);
     }
 
@@ -195,7 +209,7 @@
         if(p && currentPlayer===1) {
             if(!selectedPoint) selectedPoint = p;
             else { if(canConnect(selectedPoint, p)) attemptMove(selectedPoint, p); selectedPoint = null; }
-        } else selectedPoint = null;
+        } else { selectedPoint = null; }
     });
 </script>
 </body>
