@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.19.5</title>
+    <title>우주전쟁 v.0.1.3</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; -webkit-tap-highlight-color: transparent; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
@@ -12,6 +12,7 @@
         .score-box { pointer-events: auto; font-size: 13px; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.85); border-radius: 8px; border: 1px solid #ffffff33; line-height: 1.5; min-width: 150px; }
         #timer-display { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); font-size: 32px; font-weight: bold; color: #ff3e3e; text-shadow: 0 0 10px #000; }
         #turn-msg { position: absolute; top: 135px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px #000; width: 100%; text-align: center; }
+        #countdown-msg { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px #000; display:none; }
         #bottom-ctrl { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: none; gap: 10px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; z-index: 200; }
         .ctrl-btn { color: white; background: rgba(255,255,255,0.1); border: 1px solid #3498db; padding: 6px 15px; border-radius: 20px; cursor: pointer; font-size: 12px; }
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.9); pointer-events: auto; }
@@ -22,7 +23,6 @@
 </head>
 <body>
     <canvas id="gameCanvas"></canvas>
-    
     <audio id="bgm" loop preload="auto"><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg"></audio>
     <audio id="snd-select" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg"></audio>
     <audio id="snd-connect" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" type="audio/mpeg"></audio>
@@ -33,13 +33,13 @@
     <div id="rule-screen" class="overlay">
         <div class="rank-card">
             <h2 style="color:#00ffcc; margin-bottom:5px;">🌬️ 바람의 후예</h2>
-            <p style="font-size:12px; color:#aaa; margin-bottom:15px;">v0.0.19.5 전략 스코어링</p>
-            <div style="text-align:left; padding:15px; font-size:13px; line-height:1.6;">
-                🎯 <b>점수 룰:</b><br>
-                - 3변 자기 선: <b>100%</b> 점수<br>
-                - 2변 자기 선: <b>80%</b> 점수<br>
-                - 1변 자기 선: <b>50%</b> 점수<br>
-                ⚠️ <b>시간 패널티:</b> 10초 초과 시 누적 감점!
+            <p style="font-size:12px; color:#aaa; margin-bottom:20px;">v.0.1.3 영토 카운트다운 복구</p>
+            <div style="text-align:left; padding:15px; font-size:14px;">
+                <label>🤖 제국군 난이도:</label> 
+                <select id="ai-diff"><option value="1800">쉬움</option><option value="1200" selected>보통</option><option value="600">어려움</option></select>
+                <br><br>
+                <label>✨ 성계(별) 개수: <span id="sv">25</span>개</label> 
+                <input type="range" id="star-count" min="15" max="35" value="25" oninput="document.getElementById('sv').innerText=this.value">
             </div>
             <button class="start-btn" onclick="startWithSound()">함대 출격</button>
         </div>
@@ -61,6 +61,7 @@
         </div>
         <div id="timer-display">10</div>
         <div id="turn-msg">시스템 초기화 중...</div>
+        <div id="countdown-msg">남은 영토: 5</div>
         <div id="bottom-ctrl">
             <button class="ctrl-btn" onclick="toggleBGM()">🎵 주파수</button>
             <button class="ctrl-btn" onclick="location.reload()">퇴각</button>
@@ -76,7 +77,7 @@
 
     let points=[], lines=[], triangles=[], selectedPoint=null, mousePos={x:0,y:0}, isDragging=false;
     let currentPlayer=1, scores={1:0, 2:0}, effects=[], isGameOver = false, turnTime = 10, timerInterval;
-    let penaltyCount = {1:0, 2:0}, gameStarted = false;
+    let penaltyCount = {1:0, 2:0}, gameStarted = false, aiLevel = 1200;
     let aiAnim = { active: false, startP: null, targetP: null, progress: 0 };
 
     function playSnd(id, vol=0.5) {
@@ -89,9 +90,11 @@
         ['snd-select', 'snd-connect', 'snd-capture-player', 'snd-capture-ai', 'snd-end'].forEach(id => {
             const s = document.getElementById(id); s.play().then(()=> { s.pause(); s.currentTime=0; }).catch(()=>{});
         });
+        aiLevel = parseInt(document.getElementById('ai-diff').value);
+        let starCount = parseInt(document.getElementById('star-count').value);
         document.getElementById('rule-screen').style.display = 'none';
         document.getElementById('bottom-ctrl').style.display = 'flex';
-        startGame(25);
+        startGame(starCount);
     }
 
     function startGame(count) {
@@ -125,13 +128,14 @@
             turnTime--; 
             document.getElementById('timer-display').innerText = turnTime;
             if(turnTime <= 0) {
-                // 강력한 누적 패널티 시스템
                 penaltyCount[currentPlayer]++;
                 let penaltyValue = penaltyCount[currentPlayer] * 50; 
                 scores[currentPlayer] = Math.max(0, scores[currentPlayer] - penaltyValue);
-                effects.push({x: canvas.width/2, y: 150, text: `통신 두절! -${penaltyValue}억 손실`, color: "#ff3e3e"});
-                playSnd('snd-capture-ai', 0.5); // 경고음 대용
-                updateUI(); nextTurn();
+                effects.push({x: canvas.width/2, y: 150, text: `⚠️ 시간 초과! -${penaltyValue}억`, color: "#ff3e3e", size: 22});
+                playSnd('snd-capture-ai', 0.5);
+                updateUI();
+                clearInterval(timerInterval);
+                setTimeout(nextTurn, 800);
             }
         }, 1000);
     }
@@ -139,33 +143,41 @@
     function attemptMove(p1, p2) {
         lines.push({p1, p2, player: currentPlayer}); 
         playSnd('snd-connect', 0.6);
-        let found = false;
+        let foundThisTurn = false;
+        let turnCombo = 0;
 
         points.forEach(p3 => {
             if(p3 === p1 || p3 === p2) return;
             const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
             const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
-            const l3 = lines.find(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1)); // 방금 그은 선
+            const l3 = lines.find(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1)); 
 
             if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
                 triangles.push({p1, p2, p3, player: currentPlayer});
+                turnCombo++;
+                foundThisTurn = true;
                 
-                // 전략적 점수 계산 로직
                 let myLines = [l1, l2, l3].filter(l => l.player === currentPlayer).length;
-                let multiplier = 1.0;
-                if(myLines === 2) multiplier = 0.8;
-                if(myLines === 1) multiplier = 0.5;
-
+                let multiplier = myLines === 3 ? 1.0 : (myLines === 2 ? 0.8 : 0.5);
                 let baseTroop = Math.floor(Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y)) / 100)) + 50; 
-                let finalTroop = Math.floor(baseTroop * multiplier);
                 
-                scores[currentPlayer] += finalTroop; found = true;
-                effects.push({x: (p1.x+p2.x+p3.x)/3, y: (p1.y+p2.y+p3.y)/3, text: `${finalTroop}억 (${Math.round(multiplier*100)}%)`, color: currentPlayer==1?"#2ecc71":"#e74c3c"});
+                let isCritical = Math.random() < 0.1;
+                if(isCritical) multiplier *= 2.0;
+
+                let finalTroop = Math.floor(baseTroop * multiplier) + (turnCombo > 1 ? turnCombo * 20 : 0);
+                if(scores[currentPlayer === 1 ? 2 : 1] - scores[currentPlayer] > 500) finalTroop += 30;
+
+                scores[currentPlayer] += finalTroop;
+                
+                let cx = (p1.x+p2.x+p3.x)/3, cy = (p1.y+p2.y+p3.y)/3;
+                if(isCritical) effects.push({x: cx, y: cy-25, text: "🔥 CRITICAL!!", color: "#f1c40f", size: 24});
+                effects.push({x: cx, y: cy, text: `+${finalTroop}억 (${Math.round(multiplier*100)}%)`, color: currentPlayer==1?"#2ecc71":"#e74c3c", size: 16});
+                
                 playSnd(currentPlayer === 1 ? 'snd-capture-player' : 'snd-capture-ai', 0.7);
             }
         });
 
-        if(!found) nextTurn(); else startTimer();
+        if(!foundThisTurn) nextTurn(); else startTimer();
         updateUI(); checkGameOver();
     }
 
@@ -173,7 +185,33 @@
         if(isGameOver) return;
         currentPlayer = currentPlayer === 1 ? 2 : 1; 
         updateTurnMsg(); startTimer(); updateUI(); 
-        if(currentPlayer === 2) setTimeout(aiThink, 1200); 
+        if(currentPlayer === 2) setTimeout(aiThink, aiLevel); 
+        checkRemainingTerritories(); // 턴 바뀔 때마다 남은 영토 체크
+    }
+
+    function checkRemainingTerritories() {
+        let count = 0;
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) {
+                if(canConnect(points[i], points[j])) {
+                    // 이 선을 그었을 때 삼각형이 생기는지 시뮬레이션
+                    points.forEach(p3 => {
+                        if(p3 === points[i] || p3 === points[j]) return;
+                        const l1 = lines.some(l => (l.p1===points[i] && l.p2===p3) || (l.p1===p3 && l.p2===points[i]));
+                        const l2 = lines.some(l => (l.p1===points[j] && l.p2===p3) || (l.p1===p3 && l.p2===points[j]));
+                        if(l1 && l2) count++;
+                    });
+                }
+            }
+        }
+        const cdMsg = document.getElementById('countdown-msg');
+        if(count > 0 && count <= 5) {
+            cdMsg.innerText = `⚠️ 확보 가능 영토: ${count}개 남음!`;
+            cdMsg.style.display = 'block';
+        } else {
+            cdMsg.style.display = 'none';
+        }
+        return count;
     }
 
     function aiThink() {
@@ -187,7 +225,7 @@
                         if(p3 === points[i] || p3 === points[j]) return;
                         const hasL1 = lines.some(l => (l.p1===points[i] && l.p2===p3) || (l.p1===p3 && l.p2===points[i]));
                         const hasL2 = lines.some(l => (l.p1===points[j] && l.p2===p3) || (l.p1===p3 && l.p2===points[j]));
-                        if(hasL1 && hasL2) score = 10; // 인공지능도 삼각형 우선
+                        if(hasL1 && hasL2) score = 10;
                     });
                     pss.push({p1: points[i], p2: points[j], score});
                 }
@@ -195,9 +233,9 @@
         }
         if(pss.length > 0) {
             pss.sort((a, b) => b.score - a.score);
-            let topTier = pss.filter(p => p.score === pss[0].score);
-            let choice = topTier[Math.floor(Math.random()*topTier.length)];
-            aiAnim.startP = choice.p1; aiAnim.targetP = choice.p2; aiAnim.progress = 0; aiAnim.active = true;
+            let choice = pss.filter(p => p.score === pss[0].score);
+            let final = choice[Math.floor(Math.random()*choice.length)];
+            aiAnim.startP = final.p1; aiAnim.targetP = final.p2; aiAnim.progress = 0; aiAnim.active = true;
         } else nextTurn();
     }
 
@@ -225,6 +263,7 @@
         if(moves === 0 && gameStarted) {
             isGameOver = true; clearInterval(timerInterval);
             playSnd('snd-end', 0.8);
+            document.getElementById('countdown-msg').style.display = 'none';
             document.getElementById('final-score').innerHTML = `연맹 병력: ${scores[1].toLocaleString()}억 명<br>제국 병력: ${scores[2].toLocaleString()}억 명`;
             document.getElementById('winner-text').innerText = scores[1] > scores[2] ? "승리! 행성을 탈환했습니다!" : "패배... 성계가 함락되었습니다.";
             document.getElementById('result-screen').style.display = 'flex';
@@ -281,7 +320,7 @@
         });
 
         for(let i = effects.length - 1; i >= 0; i--) {
-            let e = effects[i]; ctx.fillStyle = e.color; ctx.font = "bold 16px Arial"; ctx.textAlign = "center";
+            let e = effects[i]; ctx.fillStyle = e.color; ctx.font = `bold ${e.size}px Arial`; ctx.textAlign = "center";
             ctx.fillText(e.text, e.x, e.y); e.y -= 1.0; if(e.y < 0) effects.splice(i, 1);
         }
         requestAnimationFrame(drawLoop);
