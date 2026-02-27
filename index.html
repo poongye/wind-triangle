@@ -2,12 +2,12 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>우주전쟁 v0.0.16.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>우주전쟁 v0.0.16.1</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; }
-        #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
-        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: manipulation; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; -webkit-tap-highlight-color: transparent; }
+        #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 1; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
         
         #fixed-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
         .score-container { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
@@ -15,19 +15,19 @@
         
         #timer-display { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-size: 32px; font-weight: bold; color: #ff3e3e; text-shadow: 0 0 10px #000; }
 
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.9); }
-        .rank-card { background: rgba(15, 15, 30, 0.98); padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 90%; max-width: 400px; text-align: center; overflow-y: auto; max-height: 90vh; }
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.85); pointer-events: auto; }
+        .rank-card { background: rgba(15, 15, 30, 0.98); padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 85%; max-width: 350px; text-align: center; }
         
-        .setup-section { text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; }
-        .setup-item { margin-bottom: 10px; font-size: 14px; color: #00ffcc; }
-        select, input[type=range] { width: 100%; margin-top: 5px; background: #111; color: white; border: 1px solid #3498db; padding: 5px; border-radius: 5px; }
+        .setup-section { text-align: left; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; margin-bottom: 15px; }
+        .setup-item { margin-bottom: 8px; font-size: 14px; color: #00ffcc; }
+        select, input[type=range] { width: 100%; margin-top: 5px; background: #111; color: white; border: 1px solid #3498db; padding: 8px; border-radius: 5px; pointer-events: auto; }
 
-        .rank-list { background: rgba(0,0,0,0.5); border-radius: 10px; margin: 10px 0; padding: 8px; border: 1px solid #3498db44; }
+        .rank-list { background: rgba(0,0,0,0.5); border-radius: 10px; margin: 10px 0; padding: 8px; border: 1px solid #3498db44; max-height: 120px; overflow-y: auto; }
         .rank-item { display: flex; justify-content: space-between; font-size: 11px; padding: 4px 0; border-bottom: 1px solid #ffffff11; }
         .rank-item.me { color: #00ffcc; font-weight: bold; }
         
-        .start-btn { padding: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 10px; cursor: pointer; width: 100%; box-shadow: 0 0 15px rgba(52, 152, 219, 0.5); }
-        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(0,0,0,0.85); padding: 10px 25px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; }
+        .start-btn { padding: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; pointer-events: auto; }
+        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: none; gap: 15px; background: rgba(0,0,0,0.85); padding: 10px 25px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -37,7 +37,7 @@
 
     <div id="rule-screen" class="overlay">
         <div class="rank-card">
-            <h2 style="color:#3498db; margin:0 0 10px 0;">🌌 우주전쟁 v0.0.16.0</h2>
+            <h2 style="color:#3498db; margin:0 0 10px 0;">🌌 우주전쟁 v0.0.16.1</h2>
             
             <div class="setup-section">
                 <div class="setup-item">
@@ -50,10 +50,10 @@
                 </div>
             </div>
 
-            <div style="font-size:13px; color:#aaa; margin-bottom:5px;">Global Ranking (Poongye)</div>
+            <div style="font-size:13px; color:#aaa; margin-bottom:5px;">Poongye Global Ranking</div>
             <div class="rank-list" id="rank-content"></div>
 
-            <button class="start-btn" onclick="showGame()">전투 개시</button>
+            <button class="start-btn" id="real-start-btn">전투 개시</button>
         </div>
     </div>
 
@@ -63,9 +63,9 @@
             <div class="score-box" style="color:#e74c3c;">제국: <span id="s2">0</span></div>
         </div>
         <div id="timer-display">10</div>
-        <div id="mid-msg" style="position:absolute; top:130px; left:50%; transform:translateX(-50%); font-weight:bold; text-shadow:0 0 5px #000;"></div>
-        <div id="bottom-ctrl" style="display:none;">
-            <button onclick="toggleBGM()" id="bgm-btn" style="color:white; background:none; border:none; cursor:pointer;">🎵 BGM</button>
+        <div id="mid-msg" style="position:absolute; top:130px; left:50%; transform:translateX(-50%); font-weight:bold;"></div>
+        <div id="bottom-ctrl">
+            <button onclick="toggleBGM()" style="color:white; background:none; border:none; cursor:pointer;">🎵 BGM</button>
             <button onclick="location.reload()" style="color:#e74c3c; background:none; border:none; cursor:pointer;">🏳️ 종료</button>
         </div>
     </div>
@@ -75,9 +75,10 @@
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    
     const playSound = (f, t, d) => {
         try {
-            const a = new (window.AudioContext || window.webkitAudioContext)();
+            const a = new (AudioContext || webkitAudioContext)();
             const o = a.createOscillator(); const g = a.createGain();
             o.type = t; o.frequency.setValueAtTime(f, a.currentTime);
             g.gain.setValueAtTime(0.05, a.currentTime); g.gain.exponentialRampToValueAtTime(0.01, a.currentTime+d);
@@ -93,14 +94,10 @@
         let ranks = [
             {id: "Poongye(Me)", score: parseInt(myBest), ip: "124.53.***.***", me: true},
             {id: "StarLord", score: 450, ip: "211.234.***.***", me: false},
-            {id: "Ace_X", score: 380, ip: "14.32.***.***", me: false},
-            {id: "Nova_Commander", score: 320, ip: "110.12.***.***", me: false}
+            {id: "Ace_X", score: 380, ip: "14.32.***.***", me: false}
         ].sort((a,b)=>b.score - a.score);
         document.getElementById('rank-content').innerHTML = ranks.map((r,i)=>`
-            <div class="rank-item ${r.me?'me':''}">
-                <span>${i+1}. ${r.id} <small style="color:#555">(${r.ip})</small></span>
-                <span>${r.score}</span>
-            </div>
+            <div class="rank-item ${r.me?'me':''}"><span>${i+1}. ${r.id}</span><span>${r.score}</span></div>
         `).join('');
     }
     loadRanking();
@@ -108,12 +105,17 @@
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    function showGame() {
+    // 모바일 클릭/터치 완벽 대응
+    const startBtn = document.getElementById('real-start-btn');
+    const startFn = (e) => {
+        e.preventDefault();
         aiDelay = parseInt(document.getElementById('ai-diff').value);
         document.getElementById('rule-screen').style.display='none';
         document.getElementById('bottom-ctrl').style.display='flex';
         startGame(parseInt(document.getElementById('star-count').value));
-    }
+    };
+    startBtn.addEventListener('click', startFn);
+    startBtn.addEventListener('touchstart', startFn);
 
     function startGame(count) {
         points = []; lines = []; triangles = []; scores = {1:0, 2:0}; currentPlayer = 1; isGameOver = false;
@@ -137,9 +139,7 @@
             turnTime--; document.getElementById('timer-display').innerText = turnTime;
             if(turnTime <= 0) { 
                 scores[currentPlayer] = Math.max(0, scores[currentPlayer]-15); 
-                playSound(150, 'sawtooth', 0.5); 
-                effects.push({x: canvas.width/2, y: 150, text: "-15 Time Over", color: "#f00", alpha: 2});
-                nextTurn(); 
+                playSound(150, 'sawtooth', 0.5); nextTurn(); 
             }
         }, 1000);
     }
@@ -151,11 +151,9 @@
 
     function attemptMove(p1, p2) {
         if (p1.type !== 'none' || p2.type !== 'none' || lines.some(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1)) || lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return;
-        
         lines.push({p1, p2, player: currentPlayer});
         playSound(440, 'sine', 0.1);
         let found = false;
-
         points.forEach(p3 => {
             if(p3 === p1 || p3 === p2 || p3.type !== 'none') return;
             const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
@@ -173,31 +171,31 @@
                 effects.push({x: (p1.x+p2.x+p3.x)/3, y: (p1.y+p2.y+p3.y)/3, text: "+"+b, color: currentPlayer==1?"#2ecc71":"#e74c3c", alpha: 1.5});
             }
         });
-
         if(Math.random() < 0.3) {
             let ts = points.filter(p => p.type === 'none' && !p.isCore);
             if(ts.length > 0) ts[Math.floor(Math.random()*ts.length)].type = Math.random() > 0.6 ? 'heart' : 'bomb';
         }
-
         if(!found) nextTurn(); else startTimer();
-        updateUI();
-        checkGameOver();
+        updateUI(); checkGameOver();
     }
 
     function checkGameOver() {
         let possible = false;
-        for(let i=0; i<points.length; i++) for(let j=i+1; j<points.length; j++) if(canConnect(points[i], points[j])) { possible = true; break; }
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) { if(canConnect(points[i], points[j])) { possible = true; break; } }
+            if(possible) break;
+        }
         if(!possible) {
             isGameOver = true; clearInterval(timerInterval);
-            const best = localStorage.getItem('poongye_highscore') || 0;
-            if(scores[1] > best) { localStorage.setItem('poongye_highscore', scores[1]); alert("New Record!"); }
-            setTimeout(()=>location.reload(), 2000);
+            if(scores[1] > (localStorage.getItem('poongye_highscore') || 0)) localStorage.setItem('poongye_highscore', scores[1]);
+            setTimeout(()=>location.reload(), 3000);
         }
     }
 
     function isItIn(p, a, b, c) {
-        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y))/2);
-        return Math.abs(area(a,b,c) - (area(p,b,c)+area(a,p,c)+area(a,b,p))) < 1;
+        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-1) + p3.x*(1-p2.y))/2);
+        const A = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y))/2);
+        return Math.abs(A(a,b,c) - (A(p,b,c)+A(a,p,c)+A(a,b,p))) < 1;
     }
 
     function nextTurn() { currentPlayer = (currentPlayer === 1) ? 2 : 1; startTimer(); updateUI(); if(currentPlayer === 2) setTimeout(ai, aiDelay); }
@@ -220,7 +218,10 @@
     }
 
     function drawLoop() {
+        // ⭐ 핵심 수정: 턴 전환 시 검게 변하는 현상 방지
+        ctx.globalCompositeOperation = 'source-over';
         ctx.clearRect(0,0,canvas.width,canvas.height);
+        
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
             ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)'; ctx.fill();
@@ -240,10 +241,9 @@
         for(let i=effects.length-1; i>=0; i--) {
             let e = effects[i]; ctx.globalAlpha = Math.min(1, e.alpha);
             ctx.fillStyle = e.color; ctx.font = "bold 20px Arial"; ctx.textAlign="center";
-            ctx.fillText(e.text, e.x, e.y);
-            e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
+            ctx.fillText(e.text, e.x, e.y); e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
         }
-        requestAnimationFrame(drawLoop);
+        if(!isGameOver) requestAnimationFrame(drawLoop);
     }
 
     const handleIn = (x, y) => {
@@ -255,7 +255,10 @@
         } else selectedPoint = null;
     };
     canvas.addEventListener('mousedown', e => handleIn(e.clientX, e.clientY));
-    canvas.addEventListener('touchstart', e => { if(e.touches.length===1) handleIn(e.touches[0].clientX, e.touches[0].clientY); });
+    canvas.addEventListener('touchstart', e => { 
+        const touch = e.touches[0];
+        handleIn(touch.clientX, touch.clientY);
+    });
 </script>
 </body>
 </html>
