@@ -3,28 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.14.6 - 풍예 에디션</title>
+    <title>우주전쟁 v0.0.14.7 - 풍예 에디션</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
         
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.6); }
-        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #3498db; max-width: 500px; box-shadow: 0 0 30px rgba(52, 152, 219, 0.5); }
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.8); }
+        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 30px; border-radius: 20px; border: 2px solid #3498db; max-width: 400px; }
         
-        .setup-group { margin: 15px 0; text-align: left; background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; }
-        label { display: block; margin-bottom: 8px; font-weight: bold; color: #00ffcc; }
-        select, input { width: 100%; padding: 8px; border-radius: 5px; border: 1px solid #3498db; background: #111; color: white; cursor: pointer; }
+        .setup-group { margin: 15px 0; text-align: left; }
+        select, input { width: 100%; padding: 10px; margin-top: 5px; border-radius: 5px; background: #111; color: white; border: 1px solid #3498db; }
 
-        .menu-btn { padding: 15px; margin-top: 20px; font-size: 18px; font-weight: bold; border: 2px solid #3498db; background: transparent; color: #fff; border-radius: 10px; cursor: pointer; width: 100%; transition: 0.3s; }
-        .menu-btn:hover { background: #3498db; box-shadow: 0 0 20px #3498db; }
+        .menu-btn { padding: 15px; margin-top: 20px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 10px; cursor: pointer; width: 100%; }
         
-        #patch-notes { display: none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 500px; max-height: 70vh; background: rgba(10, 10, 30, 0.98); border: 2px solid #00ffcc; border-radius: 15px; padding: 25px; z-index: 200; overflow-y: auto; text-align: left; }
         #ingame-ui { position: absolute; top: 20px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; }
-        .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid rgba(255,255,255,0.2); }
+        .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.8); border-radius: 10px; border: 1px solid #fff3; }
         #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 150; display: none; align-items: center; gap: 20px; background: rgba(0,0,0,0.9); padding: 10px 25px; border-radius: 50px; border: 1px solid #00ffcc; }
         #skill-bar-bg { width: 150px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid #00ffcc; overflow: hidden; }
-        #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); transition: 0.3s; }
+        #skill-bar { width: 0%; height: 100%; background: #00ffcc; transition: 0.3s; }
     </style>
 </head>
 <body>
@@ -34,48 +31,32 @@
 
     <div id="rule-screen" class="overlay">
         <div class="rule-card">
-            <h1 style="margin-top:0;">🌌 우주전쟁 v0.0.14.6</h1>
-            
+            <h1>🌌 우주전쟁 v0.0.14.7</h1>
             <div class="setup-group">
-                <label>🤖 제국군 난이도 (AI)</label>
-                <select id="ai-diff">
-                    <option value="easy">쉬움 (느릿느릿)</option>
-                    <option value="normal" selected>보통 (균형잡힘)</option>
-                    <option value="hard">어려움 (빈틈없음)</option>
-                </select>
+                <label>🤖 난이도</label>
+                <select id="ai-diff"><option value="800">보통</option><option value="400">어려움</option></select>
             </div>
-
             <div class="setup-group">
-                <label>✨ 별의 개수 (밀도)</label>
-                <input type="range" id="star-count" min="15" max="35" value="22">
-                <div id="star-val" style="text-align:right; font-size:12px;">22개</div>
+                <label>✨ 별 개수</label>
+                <input type="range" id="star-count" min="15" max="30" value="20">
             </div>
-
-            <button class="menu-btn" onclick="showGame()">전투 시작</button>
-            <button class="menu-btn" style="border-color:#00ffcc; color:#00ffcc; margin-top:10px; font-size:14px; padding:10px;" onclick="togglePatchNotes(true)">📋 패치 노트</button>
+            <button class="menu-btn" onclick="showGame()">전투 개시</button>
         </div>
-    </div>
-
-    <div id="patch-notes">
-        <h2 style="color:#00ffcc; border-bottom: 2px solid #00ffcc; padding-bottom: 10px;">📋 업데이트 기록</h2>
-        <div style="font-weight:bold; color:#00ffcc; margin-top:10px;">v0.0.14.6</div>
-        <div>- <b>설정 복원:</b> 난이도 및 별 개수 조절 메뉴 다시 추가<br>- <b>완벽 겹침 방지:</b> 모든 천체 간 최소 100px 보증 알고리즘</div>
-        <button class="menu-btn" onclick="togglePatchNotes(false)">닫기</button>
     </div>
 
     <div id="ingame-ui">
         <div class="score-box" style="color:#2ecc71;">연맹군: <span id="s1">0</span></div>
-        <div id="mid-msg"></div>
+        <div id="mid-msg" style="font-size:24px; font-weight:bold;"></div>
         <div class="score-box" style="color:#e74c3c;">제국군: <span id="s2">0</span></div>
     </div>
 
     <div id="bottom-ctrl">
-        <button id="bgm-toggle" style="background:none; border:none; color:white; cursor:pointer;" onclick="toggleBGM()">🎵 ON</button>
+        <button onclick="toggleBGM()" style="background:none; border:none; color:white; cursor:pointer;">🎵 BGM</button>
         <div style="text-align:center;">
-            <div id="skill-label" style="font-size:10px; color:#00ffcc; font-weight:bold;">WIND ENERGY [S]</div>
+            <div id="skill-label" style="font-size:10px; color:#00ffcc;">WIND ENERGY [S]</div>
             <div id="skill-bar-bg"><div id="skill-bar"></div></div>
         </div>
-        <button style="background:none; border:1px solid #e74c3c; color:#e74c3c; border-radius:10px; padding:5px 10px; cursor:pointer;" onclick="location.reload()">🏳️ 포기</button>
+        <button onclick="location.reload()" style="background:none; border:1px solid #e74c3c; color:#e74c3c; border-radius:10px; cursor:pointer;">🏳️ 포기</button>
     </div>
 
     <canvas id="gameCanvas"></canvas>
@@ -84,11 +65,8 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
-    let skillGauge=0, effects=[], frame = 0, bgm = document.getElementById('bgm'), isBGMPlaying = false;
-    let aiDifficulty = 'normal';
-
-    const starSlider = document.getElementById('star-count');
-    starSlider.oninput = function() { document.getElementById('star-val').innerText = this.value + "개"; };
+    let skillGauge=0, effects=[], bgm = document.getElementById('bgm'), isBGMPlaying = false;
+    let aiDelay = 800;
 
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     function playSound(freq, type, duration, vol=0.1) {
@@ -106,46 +84,43 @@
     function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    function togglePatchNotes(show) { document.getElementById('patch-notes').style.display = show ? 'block' : 'none'; }
     function toggleBGM() {
         if (audioCtx.state === 'suspended') audioCtx.resume();
-        if (!isBGMPlaying) { bgm.play().catch(e=>{}); document.getElementById('bgm-toggle').innerText = "🔇 OFF"; isBGMPlaying = true; }
-        else { bgm.pause(); document.getElementById('bgm-toggle').innerText = "🎵 ON"; isBGMPlaying = false; }
+        if (!isBGMPlaying) { bgm.play().catch(()=>{}); isBGMPlaying = true; }
+        else { bgm.pause(); isBGMPlaying = false; }
     }
 
     function showGame() {
-        aiDifficulty = document.getElementById('ai-diff').value;
+        aiDelay = parseInt(document.getElementById('ai-diff').value);
         document.getElementById('rule-screen').style.display='none';
         document.getElementById('ingame-ui').style.display='flex';
         document.getElementById('bottom-ctrl').style.display='flex';
         if(!isBGMPlaying) toggleBGM();
-        startGame(parseInt(starSlider.value));
+        startGame(parseInt(document.getElementById('star-count').value));
     }
 
     function startGame(count) {
-        currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; skillGauge=0;
-        // 1. 태양 배치
-        points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
+        points = []; lines = []; triangles = []; scores = {1:0, 2:0}; skillGauge = 0; currentPlayer = 1;
         
-        // 2. 겹침 방지 강화 (While 루프 + 거리 최소 100px 보증)
-        let attempts = 0;
-        while(points.length < count && attempts < 1000) {
-            let nx = Math.random()*(canvas.width-200)+100;
-            let ny = Math.random()*(canvas.height-200)+100;
+        // 1. 태양 (중앙)
+        points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
+
+        // 2. 완벽 겹침 방지 배치
+        let safetyCounter = 0;
+        while(points.length < count && safetyCounter < 2000) {
+            let nx = 100 + Math.random() * (canvas.width - 200);
+            let ny = 100 + Math.random() * (canvas.height - 200);
             
-            // 모든 기존 포인트와 최소 100px 거리가 되는지 확인
-            let isSafe = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 100);
-            
-            if(isSafe) {
+            // 모든 별 사이의 거리를 최소 110px 이상으로 고정
+            if (points.every(p => Math.hypot(p.x - nx, p.y - ny) > 110)) {
                 let r = Math.random();
-                points.push({ x: nx, y: ny, isCore: false, isBomb: r < 0.1, isHeart: r > 0.9 });
+                points.push({ x: nx, y: ny, isCore: false, isBomb: r < 0.12, isHeart: r > 0.9 });
             }
-            attempts++;
+            safetyCounter++;
         }
         updateUI(); drawLoop();
     }
 
-    // 선 교차 검사
     function isIntersecting(p1, p2, p3, p4) {
         const cp = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
         return (cp(p1, p2, p3) * cp(p1, p2, p4) < 0) && (cp(p3, p4, p1) * cp(p3, p4, p2) < 0);
@@ -164,120 +139,118 @@
         });
     }
 
-    function useSkill() {
-        if(skillGauge < 100 || currentPlayer !== 1) return;
-        skillGauge = 0;
-        playSound(200, 'sawtooth', 0.8, 0.3);
-        effects.push({x: canvas.width/2, y: canvas.height/2, text: "💨 WIND ENERGY BURST!!", color: "#00ffcc", alpha: 2, size: 40});
-        for(let k=0; k<3; k++) {
-            let p1 = points[Math.floor(Math.random()*points.length)];
-            let p2 = points[Math.floor(Math.random()*points.length)];
-            let p3 = points[Math.floor(Math.random()*points.length)];
-            if(p1!==p2 && p2!==p3 && p3!==p1) {
-                triangles.push({p1,p2,p3,player:1, anim:0});
-                scores[1] += 50;
-            }
-        }
-        updateUI();
-    }
-
-    window.addEventListener('keydown', e => { if(e.code === 'KeyS') useSkill(); });
-
     function attemptMove(p1, p2) {
         if (!canConnect(p1, p2)) return;
+        
+        lines.push({p1, p2, player: currentPlayer});
         playSound(440, 'sine', 0.1);
-        lines.push({p1, p2, player:currentPlayer});
-        let found = false;
+        let foundTriangle = false;
+
         points.forEach(p3 => {
-            if(p3===p1 || p3===p2) return;
-            const l1 = lines.find(ln=>(ln.p1===p1&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p1));
-            const l2 = lines.find(ln=>(ln.p1===p2&&ln.p2===p3)||(ln.p1===p3&&ln.p2===p2));
+            if(p3 === p1 || p3 === p2) return;
+            const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
+            const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
+            
             if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
-                let cx = (p1.x + p2.x + p3.x) / 3, cy = (p1.y + p2.y + p3.y) / 3;
-                const sunMult = Math.round((1.0 + (1.0 - Math.min(Math.hypot(cx - canvas.width/2, cy - canvas.height/2) / (canvas.width/2), 1.0)) * 2.0) * 10) / 10;
-                triangles.push({p1,p2,p3,player:currentPlayer, anim:0});
+                triangles.push({p1, p2, p3, player: currentPlayer, anim: 0});
+                let cx = (p1.x+p2.x+p3.x)/3, cy = (p1.y+p2.y+p3.y)/3;
+                let sunDist = Math.hypot(cx - canvas.width/2, cy - canvas.height/2);
+                let mult = Math.round((1 + (1 - Math.min(sunDist/(canvas.width/2), 1)) * 2) * 10) / 10;
+                
                 if(p1.isBomb || p2.isBomb || p3.isBomb) {
-                    scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 25);
-                    playSound(100, 'sawtooth', 0.5, 0.2);
-                    effects.push({x:cx, y:cy, text:"💣 BOOM! -25", color:"#ff3f34", alpha:1.5});
+                    scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 30);
+                    effects.push({x:cx, y:cy, text:"💣 BOOM! -30", color:"#ff3f34", alpha:1.5});
+                    playSound(100, 'sawtooth', 0.4);
                 } else {
-                    let finalAdd = Math.floor(10 * sunMult);
-                    scores[currentPlayer] += finalAdd;
-                    playSound(880, 'square', 0.2, 0.1);
-                    effects.push({x:cx, y:cy, text:`+${finalAdd} (x${sunMult})`, color:currentPlayer===1?"#2ecc71":"#e74c3c", alpha:1.5});
+                    let score = Math.floor(10 * mult);
+                    scores[currentPlayer] += score;
+                    effects.push({x:cx, y:cy, text:`+${score} (x${mult})`, color:currentPlayer===1?"#2ecc71":"#e74c3c", alpha:1.5});
+                    playSound(880, 'square', 0.2);
                 }
-                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 34);
-                found = true;
+                if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 35);
+                foundTriangle = true;
             }
         });
-        if(!found) currentPlayer = currentPlayer===1 ? 2 : 1;
-        updateUI(); 
-        if(currentPlayer===2) {
-            let delay = aiDifficulty === 'easy' ? 1500 : (aiDifficulty === 'hard' ? 400 : 800);
-            setTimeout(aiMove, delay);
-        }
+
+        if(!foundTriangle) currentPlayer = (currentPlayer === 1) ? 2 : 1;
+        updateUI();
+        if(currentPlayer === 2) setTimeout(aiPlay, aiDelay);
     }
 
-    function aiMove() {
-        if (currentPlayer !== 2) return;
-        let moves = [];
-        for (let i = 0; i < points.length; i++) {
-            for (let j = i + 1; j < points.length; j++) {
-                if (canConnect(points[i], points[j])) moves.push({ p1: points[i], p2: points[j] });
+    function aiPlay() {
+        if(currentPlayer !== 2) return;
+        let possible = [];
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) {
+                if(canConnect(points[i], points[j])) possible.push([points[i], points[j]]);
             }
         }
-        if (moves.length > 0) attemptMove(moves[Math.floor(Math.random()*moves.length)].p1, moves[Math.floor(Math.random()*moves.length)].p2);
-        else { currentPlayer = 1; updateUI(); }
+        if(possible.length > 0) {
+            let choice = possible[Math.floor(Math.random()*possible.length)];
+            attemptMove(choice[0], choice[1]);
+        } else {
+            currentPlayer = 1; updateUI(); // 둘 곳 없으면 강제 전환
+        }
     }
 
+    window.addEventListener('keydown', e => {
+        if(e.code === 'KeyS' && skillGauge >= 100 && currentPlayer === 1) {
+            skillGauge = 0;
+            playSound(200, 'sawtooth', 0.8, 0.3);
+            effects.push({x: canvas.width/2, y: canvas.height/2, text: "💨 WIND ENERGY!", color: "#00ffcc", alpha: 2, size: 40});
+            for(let i=0; i<3; i++) {
+                let p1 = points[Math.floor(Math.random()*points.length)];
+                let p2 = points[Math.floor(Math.random()*points.length)];
+                let p3 = points[Math.floor(Math.random()*points.length)];
+                if(p1!==p2 && p1!==p3 && p2!==p3) {
+                    triangles.push({p1, p2, p3, player: 1, anim: 0});
+                    scores[1] += 40;
+                }
+            }
+            updateUI();
+        }
+    });
+
     function updateUI() {
-        document.getElementById('s1').innerText = scores[1]; 
+        document.getElementById('s1').innerText = scores[1];
         document.getElementById('s2').innerText = scores[2];
-        const bar = document.getElementById('skill-bar');
-        bar.style.width = skillGauge + "%";
-        if(skillGauge >= 100) { bar.style.background = "white"; document.getElementById('skill-label').innerText = "READY! [S]"; }
-        else { bar.style.background = "linear-gradient(90deg, #00ffcc, #3498db)"; document.getElementById('skill-label').innerText = "WIND ENERGY [S]"; }
+        document.getElementById('skill-bar').style.width = skillGauge + "%";
         const m = document.getElementById('mid-msg');
-        m.innerText = currentPlayer===1 ? "연맹군 차례" : "제국군 차례";
-        m.style.color = currentPlayer===1 ? "#2ecc71" : "#e74c3c";
+        m.innerText = currentPlayer === 1 ? "연맹군 차례" : "제국군 차례";
+        m.style.color = currentPlayer === 1 ? "#2ecc71" : "#e74c3c";
     }
 
     function drawLoop() {
-        frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
         triangles.forEach(t => {
-            ctx.save(); ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player===1 ? 'rgba(46,204,113,0.15)' : 'rgba(231,76,60,0.15)'; ctx.fill();
-            ctx.strokeStyle = t.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
-            if(t.anim < 1) t.anim += 0.05;
-            ctx.translate((t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3); ctx.scale(t.anim, t.anim);
-            ctx.font = "30px Arial"; ctx.textAlign="center"; ctx.fillText(t.player===1?"🛸":"🛰️", 0, 10); ctx.restore();
+            ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
+            ctx.fillStyle = t.player === 1 ? 'rgba(46,204,113,0.2)' : 'rgba(231,76,60,0.2)'; ctx.fill();
+            ctx.strokeStyle = t.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.stroke();
         });
         lines.forEach(l => {
-            ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
-            ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
+            ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
         points.forEach(p => {
-            ctx.save(); let s = (selectedPoint === p) ? 1.3 : 1.0;
-            if(selectedPoint === p) ctx.filter = "invert(1) brightness(2)";
-            ctx.translate(p.x, p.y); ctx.scale(s, s);
-            ctx.font = p.isCore ? "50px Arial" : "34px Arial"; ctx.textAlign="center";
-            ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), 0, 10); ctx.restore();
+            ctx.font = p.isCore ? "50px Arial" : "34px Arial"; ctx.textAlign = "center";
+            ctx.fillText(p.isCore?"☀️":(p.isBomb?"💣":(p.isHeart?"💖":"✨")), p.x, p.y + 12);
+            if(selectedPoint === p) { ctx.strokeStyle = "white"; ctx.beginPath(); ctx.arc(p.x, p.y, 25, 0, Math.PI*2); ctx.stroke(); }
         });
-        for(let i = effects.length - 1; i >= 0; i--) {
-            let e = effects[i]; ctx.save(); ctx.globalAlpha = Math.min(1, e.alpha); ctx.fillStyle = e.color; 
-            ctx.font = `bold ${e.size || 20}px Arial`; ctx.textAlign = "center";
-            ctx.fillText(e.text, e.x, e.y); ctx.restore(); e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
+        for(let i=effects.length-1; i>=0; i--) {
+            let e = effects[i]; ctx.save(); ctx.globalAlpha = Math.min(1, e.alpha); ctx.fillStyle = e.color;
+            ctx.font = `bold ${e.size||20}px Arial`; ctx.textAlign="center"; ctx.fillText(e.text, e.x, e.y);
+            ctx.restore(); e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
         }
         requestAnimationFrame(drawLoop);
     }
 
     canvas.addEventListener('mousedown', e => {
-        if (currentPlayer !== 1) return;
-        const p = points.find(pt => Math.hypot(pt.x-e.clientX, pt.y-e.clientY) < 40);
+        if(currentPlayer !== 1) return;
+        const p = points.find(pt => Math.hypot(pt.x - e.clientX, pt.y - e.clientY) < 40);
         if(p) {
-            if(!selectedPoint) { selectedPoint = p; playSound(600, 'sine', 0.05, 0.05); }
+            if(!selectedPoint) { selectedPoint = p; playSound(600, 'sine', 0.05); }
             else { attemptMove(selectedPoint, p); selectedPoint = null; }
-        } else { selectedPoint = null; }
+        } else selectedPoint = null;
     });
 </script>
 </body>
