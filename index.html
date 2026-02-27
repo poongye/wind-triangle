@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>바람의 삼각형 - poongye v0.0.3</title>
+    <title>바람의 삼각형 - poongye v0.0.4</title>
     <style>
         body { margin: 0; overflow: hidden; background: #0b0e14; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -20,6 +20,11 @@
         .p1-ui { color: #2ecc71; } .p2-ui { color: #e74c3c; }
         .turn-box { font-size: 30px; font-weight: 900; padding: 15px; border-radius: 10px; border: 2px solid transparent; }
         .active-turn { background: white; color: black; box-shadow: 0 0 15px white; }
+
+        /* BGM 스위치 스타일 */
+        #bgm-control { position: absolute; bottom: 20px; left: 20px; z-index: 200; pointer-events: auto; background: rgba(0,0,0,0.5); padding: 10px; border-radius: 10px; border: 1px solid #fff; cursor: pointer; font-size: 14px; }
+        
+        .final-score { font-size: 24px; margin: 10px 0; color: #fff; }
     </style>
 </head>
 <body>
@@ -35,7 +40,7 @@
                 <li>🚫 선은 다른 선이나 점을 통과할 수 없습니다.</li>
                 <li>📐 삼각형을 만들면 <b>10점</b> 획득 후 <b>추가 턴!</b></li>
             </ul>
-            <div class="version-tag">v0.0.3</div>
+            <div class="version-tag">v0.0.4</div>
         </div>
         <button class="menu-btn" onclick="showDifficulty()">게임 시작하기</button>
     </div>
@@ -43,15 +48,15 @@
     <div id="difficulty-screen" class="overlay" style="display:none;">
         <h1>난이도 선택</h1>
         <button class="menu-btn" onclick="selectDifficulty('easy')">EASY</button>
-        <button class="menu-btn btn-normal" onclick="selectDifficulty('normal')">NORMAL</button>
-        <button class="menu-btn btn-hard" onclick="selectDifficulty('hard')">HARD</button>
+        <button class="menu-btn btn-normal" style="border-color:#3498db; color:#3498db;" onclick="selectDifficulty('normal')">NORMAL</button>
+        <button class="menu-btn btn-hard" style="border-color:#e74c3c; color:#e74c3c;" onclick="selectDifficulty('hard')">HARD</button>
     </div>
 
     <div id="count-screen" class="overlay" style="display:none;">
         <h1>점의 개수</h1>
-        <button class="menu-btn btn-count" onclick="selectPointCount(10)">10개</button>
-        <button class="menu-btn btn-count" onclick="selectPointCount(20)">20개</button>
-        <button class="menu-btn btn-count" onclick="selectPointCount(30)">30개</button>
+        <button class="menu-btn" style="border-color:#f1c40f; color:#f1c40f;" onclick="selectPointCount(10)">10개</button>
+        <button class="menu-btn" style="border-color:#f1c40f; color:#f1c40f;" onclick="selectPointCount(20)">20개</button>
+        <button class="menu-btn" style="border-color:#f1c40f; color:#f1c40f;" onclick="selectPointCount(30)">30개</button>
     </div>
 
     <div id="turn-decide-screen" class="overlay" style="display:none;">
@@ -68,9 +73,12 @@
         <div class="score-box p2-ui">AI: <span id="s2">0</span></div>
     </div>
 
+    <div id="bgm-control" onclick="toggleBGM()">🎵 BGM: ON</div>
+
     <div id="game-over-screen" class="overlay" style="display:none;">
         <h1 style="color: #f1c40f;">GAME OVER</h1>
-        <div id="winner-msg" style="font-size: 20px; margin-bottom: 20px;"></div>
+        <div id="winner-msg" style="font-size: 28px; font-weight: bold; margin-bottom: 10px;"></div>
+        <div id="final-scores" class="final-score"></div>
         <button class="menu-btn" onclick="location.reload()">다시 하기</button>
     </div>
 
@@ -80,10 +88,39 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let audioCtx;
+    const bgm = document.getElementById('bgm');
+    let isBGMOn = true;
     
     function initAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function toggleBGM() {
+        isBGMOn = !isBGMOn;
+        if (isBGMOn) {
+            bgm.play();
+            document.getElementById('bgm-control').innerText = "🎵 BGM: ON";
+        } else {
+            bgm.pause();
+            document.getElementById('bgm-control').innerText = "🔇 BGM: OFF";
+        }
+    }
+
+    // 볼륨이 키워진 효과음 함수
+    function playTone(freq, type, duration) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        // 볼륨 증폭 (기존 0.05 -> 0.2)
+        gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
     }
 
     function resize() { 
@@ -103,7 +140,8 @@
     }
 
     function selectDifficulty(l) { 
-        aiLevel = l; try { document.getElementById('bgm').play(); } catch(e) {}
+        aiLevel = l; 
+        if(isBGMOn) bgm.play();
         document.getElementById('difficulty-screen').style.display = 'none'; 
         document.getElementById('count-screen').style.display = 'flex'; 
     }
@@ -147,10 +185,18 @@
     function handleInput(clientX, clientY) {
         if (currentPlayer !== 1 || isGameOver || aiAnimating || points.length === 0) return;
         const p = points.find(pt => Math.hypot(pt.x - clientX, pt.y - clientY) < 35);
-        if (p && !selectedPoint) { selectedPoint = p; } 
+        if (p && !selectedPoint) { 
+            selectedPoint = p; 
+            playTone(440, 'sine', 0.1); // 선택 효과음
+        } 
         else if (p && selectedPoint !== p) {
-            if (canConnect(selectedPoint, p)) { attemptMove(selectedPoint, p); selectedPoint = null; } 
-            else { selectedPoint = null; }
+            if (canConnect(selectedPoint, p)) { 
+                attemptMove(selectedPoint, p); 
+                selectedPoint = null; 
+            } else { 
+                selectedPoint = null; 
+                playTone(150, 'sawtooth', 0.2); // 실패 효과음
+            }
         } else { selectedPoint = null; }
     }
 
@@ -182,19 +228,16 @@
     }
 
     function addScoreEffect() {
-        scoreEffects.push({
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            opacity: 1,
-            life: 60
-        });
+        scoreEffects.push({ x: canvas.width / 2, y: canvas.height / 2, opacity: 1, life: 60 });
+        playTone(880, 'sine', 0.2); // 득점 효과음
     }
 
     function attemptMove(p1, p2) {
         lines.push({ p1, p2, player: currentPlayer });
+        playTone(600, 'sine', 0.05); // 연결 효과음
         const bonusCount = checkTriangle(lines[lines.length-1]);
         if (bonusCount > 0) {
-            scores[currentPlayer] += (bonusCount * 10); // 땅 하나당 10점 적용
+            scores[currentPlayer] += (bonusCount * 10);
             addScoreEffect();
             updateUI(); if (!checkGameOver() && currentPlayer === 2) setTimeout(aiMove, 600);
         } else {
@@ -255,6 +298,7 @@
         if (!possible) {
             isGameOver = true;
             document.getElementById('winner-msg').innerText = scores[1] > scores[2] ? "플레이어 승리!" : (scores[1] === scores[2] ? "무승부!" : "AI 승리!");
+            document.getElementById('final-scores').innerText = `최종 점수 - USER: ${scores[1]} | AI: ${scores[2]}`;
             document.getElementById('game-over-screen').style.display = 'flex';
             return true;
         }
@@ -299,10 +343,8 @@
             ctx.font = "bold 40px 'Malgun Gothic'";
             ctx.fillStyle = `rgba(241, 196, 15, ${eff.opacity})`;
             ctx.textAlign = "center";
-            ctx.fillText("+10 POINTS", eff.x, eff.y); // 메시지 10점으로 수정
-            eff.y -= 1.5;
-            eff.opacity -= 0.02;
-            eff.life--;
+            ctx.fillText("+10 POINTS", eff.x, eff.y);
+            eff.y -= 1.5; eff.opacity -= 0.02; eff.life--;
             if (eff.life <= 0) scoreEffects.splice(i, 1);
         }
         
