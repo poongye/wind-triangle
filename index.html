@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>바람의 삼각형 - poongye v0.0.1</title>
+    <title>바람의 삼각형 - poongye v0.0.2</title>
     <style>
         body { margin: 0; overflow: hidden; background: #0b0e14; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
@@ -13,13 +13,8 @@
         h1 { font-size: 32px; color: #f1c40f; text-shadow: 0 0 20px #f1c40f; margin-bottom: 20px; }
         .menu-btn { padding: 15px; margin: 8px; font-size: 18px; font-weight: bold; border: 2px solid #2ecc71; background: transparent; color: #2ecc71; border-radius: 50px; cursor: pointer; transition: 0.2s; width: 80%; max-width: 300px; pointer-events: auto; }
         .menu-btn:hover { background: #2ecc71; color: white; }
-        
-        /* 버전 표시 스타일 */
         .version-tag { position: absolute; bottom: 10px; right: 20px; font-size: 12px; color: rgba(255, 255, 255, 0.4); font-family: monospace; }
-
-        .btn-normal { border-color: #3498db; color: #3498db; } 
-        .btn-hard { border-color: #e74c3c; color: #e74c3c; } 
-        .btn-count { border-color: #f1c40f; color: #f1c40f; }
+        
         #ingame-ui { position: absolute; top: 20px; left: 0; width: 100%; pointer-events: none; display: none; justify-content: space-between; padding: 0 20px; box-sizing: border-box; z-index: 50; }
         .score-box { font-size: 18px; font-weight: bold; }
         .p1-ui { color: #2ecc71; } .p2-ui { color: #e74c3c; }
@@ -40,7 +35,7 @@
                 <li>🚫 선은 다른 선이나 점을 통과할 수 없습니다.</li>
                 <li>📐 삼각형을 만들면 <b>1점</b> 획득 후 <b>추가 턴!</b></li>
             </ul>
-            <div class="version-tag">v0.0.1</div>
+            <div class="version-tag">v0.0.2</div>
         </div>
         <button class="menu-btn" onclick="showDifficulty()">게임 시작하기</button>
     </div>
@@ -92,14 +87,16 @@
     }
 
     function resize() { 
-        canvas.width = window.innerWidth; 
-        canvas.height = window.innerHeight; 
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight; 
         ctx.fillStyle = "#0b0e14"; ctx.fillRect(0, 0, canvas.width, canvas.height);
     }
     window.addEventListener('resize', resize); resize();
 
     let points = [], lines = [], triangles = [], selectedPoint = null, currentPlayer = 0, scores = {1:0, 2:0}, isGameOver = false, aiLevel;
     let mousePos = { x: 0, y: 0 }, aiAnimating = false, aiStartPoint, aiEndPoint, aiAnimProgress = 0;
+    
+    // 이펙트 관리용 배열
+    let scoreEffects = [];
 
     function showDifficulty() {
         initAudio();
@@ -139,13 +136,10 @@
     function startGame(count) {
         document.getElementById('turn-decide-screen').style.display = 'none';
         document.getElementById('ingame-ui').style.display = 'flex';
-        points = []; lines = []; triangles = []; scores = { 1: 0, 2: 0 }; isGameOver = false;
+        points = []; lines = []; triangles = []; scores = { 1: 0, 2: 0 }; isGameOver = false; scoreEffects = [];
         const margin = 100;
         for (let i = 0; i < count; i++) {
-            points.push({ 
-                x: Math.random() * (canvas.width - margin * 2) + margin, 
-                y: Math.random() * (canvas.height - margin * 2) + margin 
-            });
+            points.push({ x: Math.random() * (canvas.width - margin * 2) + margin, y: Math.random() * (canvas.height - margin * 2) + margin });
         }
         updateUI();
         drawLoop();
@@ -189,12 +183,22 @@
         });
     }
 
+    function addScoreEffect() {
+        scoreEffects.push({
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            opacity: 1,
+            life: 60 // 약 1초 동안 유지
+        });
+    }
+
     function attemptMove(p1, p2) {
         lines.push({ p1, p2, player: currentPlayer });
         const bonus = checkTriangle(lines[lines.length-1]);
         if (bonus > 0) {
-            scores[currentPlayer] += bonus; updateUI(); 
-            if (!checkGameOver() && currentPlayer === 2) setTimeout(aiMove, 600);
+            scores[currentPlayer] += bonus;
+            addScoreEffect(); // 득점 이펙트 추가
+            updateUI(); if (!checkGameOver() && currentPlayer === 2) setTimeout(aiMove, 600);
         } else {
             currentPlayer = currentPlayer === 1 ? 2 : 1;
             updateUI(); if (currentPlayer === 2) setTimeout(aiMove, 800);
@@ -262,14 +266,17 @@
     function drawLoop() {
         if (isGameOver) return;
         ctx.fillStyle = "#0b0e14"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
             ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)'; ctx.fill();
         });
+
         if (selectedPoint && !aiAnimating) {
             ctx.beginPath(); ctx.moveTo(selectedPoint.x, selectedPoint.y); ctx.lineTo(mousePos.x, mousePos.y);
             ctx.strokeStyle = "rgba(255,255,255,0.3)"; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
         }
+
         if (aiAnimating) {
             const curX = aiStartPoint.x + (aiEndPoint.x - aiStartPoint.x) * aiAnimProgress;
             const curY = aiStartPoint.y + (aiEndPoint.y - aiStartPoint.y) * aiAnimProgress;
@@ -277,15 +284,31 @@
             ctx.strokeStyle = '#e74c3c'; ctx.lineWidth = 3; ctx.stroke();
             aiAnimProgress += 0.05; if (aiAnimProgress >= 1) { aiAnimating = false; attemptMove(aiStartPoint, aiEndPoint); }
         }
+
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
             ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 3; ctx.stroke();
         });
+
         points.forEach(p => {
             ctx.beginPath(); ctx.arc(p.x, p.y, 6, 0, Math.PI * 2);
             ctx.fillStyle = (selectedPoint === p) ? '#fff' : '#2c3e50'; ctx.fill();
             ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
         });
+
+        // 득점 이펙트 그리기
+        for (let i = scoreEffects.length - 1; i >= 0; i--) {
+            let eff = scoreEffects[i];
+            ctx.font = "bold 40px 'Malgun Gothic'";
+            ctx.fillStyle = `rgba(241, 196, 15, ${eff.opacity})`;
+            ctx.textAlign = "center";
+            ctx.fillText("+1 POINT", eff.x, eff.y);
+            eff.y -= 1.5; // 위로 이동
+            eff.opacity -= 0.02; // 점점 투명하게
+            eff.life--;
+            if (eff.life <= 0) scoreEffects.splice(i, 1);
+        }
+        
         requestAnimationFrame(drawLoop);
     }
 </script>
