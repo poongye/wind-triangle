@@ -3,48 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.13.3 - 풍예의 결단</title>
+    <title>우주전쟁 v0.0.13.4 - 버그 수정 완료</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
-        
-        /* 메뉴 레이어 */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.5); }
-        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 25px; border-radius: 20px; border: 2px solid #3498db; max-width: 450px; box-shadow: 0 0 30px #3498db; }
-        
-        /* 버튼 스타일 */
-        .menu-btn { padding: 12px; margin: 10px; font-size: 18px; font-weight: bold; border: 2px solid #3498db; background: transparent; color: #fff; border-radius: 5px; cursor: pointer; transition: 0.3s; width: 220px; }
-        .menu-btn:hover { background: #3498db; box-shadow: 0 0 15px #3498db; }
-        
-        /* 인게임 버튼들 */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
+        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 25px; border-radius: 20px; border: 2px solid #3498db; max-width: 450px; }
+        .menu-btn { padding: 12px; margin: 10px; font-size: 18px; font-weight: bold; border: 2px solid #3498db; background: transparent; color: #fff; border-radius: 5px; cursor: pointer; width: 220px; }
         #ui-layer { position: absolute; top: 80px; right: 20px; z-index: 150; display: flex; flex-direction: column; gap: 10px; }
-        .side-btn { padding: 8px 15px; background: rgba(0,0,0,0.6); border: 1px solid #fff; color: #fff; border-radius: 5px; cursor: pointer; font-size: 14px; }
-        .side-btn:hover { background: rgba(255,255,255,0.2); }
-
-        #skill-container { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; display: none; }
-        #skill-bar-bg { width: 250px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 10px; border: 1px solid #00ffcc; overflow: hidden; margin-top: 5px; }
-        #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); transition: 0.3s; box-shadow: 0 0 10px #00ffcc; }
+        .side-btn { padding: 8px 15px; background: rgba(0,0,0,0.6); border: 1px solid #fff; color: #fff; border-radius: 5px; cursor: pointer; }
         #ingame-ui { position: absolute; top: 20px; width: 100%; display: none; z-index: 50; justify-content: space-between; padding: 0 40px; box-sizing: border-box; pointer-events: none; }
         .score-box { font-size: 20px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.7); border-radius: 10px; border: 1px solid rgba(255,255,255,0.3); }
+        #skill-container { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; display: none; }
+        #skill-bar-bg { width: 250px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 10px; border: 1px solid #00ffcc; overflow: hidden; margin-top: 5px; }
+        #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); transition: 0.3s; }
     </style>
 </head>
 <body>
 
     <div id="game-bg"></div>
-    
     <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
 
     <div id="rule-screen" class="overlay">
-        <h1>🌌 우주전쟁 v0.0.13.3</h1>
+        <h1>🌌 우주전쟁 v0.0.13.4</h1>
         <div class="rule-card">
-            <h2>📜 작전 지침 복구 완료</h2>
-            <ul style="text-align:left; font-size:15px; color:#ecf0f1; line-height:1.6;">
-                <li>🎵 **사운드:** 배경음악 및 효과음 시스템 가동</li>
-                <li>🏳️ **항복:** 전세가 불리하면 언제든 작전 중단 가능</li>
-                <li>🛡️ **베리어:** 삼각형 완성 시 에너지 보호막 가동</li>
-                <li>🌪️ **바람:** [S]키로 아이템 비점령지로 텔레포트</li>
-            </ul>
+            <h2>🛠️ 시스템 복구 완료</h2>
+            <p>삼각형 완성 시 화면이 멈추던 현상을 해결했습니다.<br>이제 베리어가 정상 가동됩니다.</p>
         </div>
         <button class="menu-btn" onclick="showGame()">전투 개시</button>
     </div>
@@ -57,7 +42,7 @@
 
     <div id="ui-layer" style="display:none;">
         <button id="bgm-toggle" class="side-btn" onclick="toggleBGM()">🎵 BGM ON</button>
-        <button class="side-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="surrender()">🏳️ 작전 중단</button>
+        <button class="side-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="location.reload()">🏳️ 항복</button>
     </div>
 
     <div id="skill-container">
@@ -72,28 +57,14 @@
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=0, scores={1:0, 2:0}, isGameOver=false;
     let doubleScore={1:false, 2:false}, skillGauge=0, itemSpawnedInTurn=false, effects=[], frame = 0;
-    let audioCtx, bgm = document.getElementById('bgm'), isBGMPlaying = false;
+    let bgm = document.getElementById('bgm'), isBGMPlaying = false;
 
     function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    // --- 사운드 제어 ---
     function toggleBGM() {
-        if (!isBGMPlaying) {
-            bgm.play().catch(e => console.log("Audio play failed", e));
-            document.getElementById('bgm-toggle').innerText = "🔇 BGM OFF";
-            isBGMPlaying = true;
-        } else {
-            bgm.pause();
-            document.getElementById('bgm-toggle').innerText = "🎵 BGM ON";
-            isBGMPlaying = false;
-        }
-    }
-
-    function surrender() {
-        if(confirm("정말 전장에서 이탈하시겠습니까? (현재 점수가 초기화됩니다)")) {
-            location.reload();
-        }
+        if (!isBGMPlaying) { bgm.play().catch(e => {}); document.getElementById('bgm-toggle').innerText = "🔇 BGM OFF"; isBGMPlaying = true; }
+        else { bgm.pause(); document.getElementById('bgm-toggle').innerText = "🎵 BGM ON"; isBGMPlaying = false; }
     }
 
     function showGame() {
@@ -101,15 +72,12 @@
         document.getElementById('ingame-ui').style.display='flex';
         document.getElementById('ui-layer').style.display='flex';
         document.getElementById('skill-container').style.display='block';
-        
-        // 사운드 초기 활성화 시도
-        toggleBGM();
+        if(!isBGMPlaying) toggleBGM();
         startGame(22);
     }
 
-    // --- 게임 로직 ---
     function startGame(count) {
-        currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; skillGauge=0; isGameOver=false;
+        currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; skillGauge=0;
         points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
         for(let i=0; i<count-1; i++) spawnStar(false);
         setInterval(() => { if(!isGameOver && !itemSpawnedInTurn) { spawnStar(true); itemSpawnedInTurn=true; } }, 5000);
@@ -118,10 +86,8 @@
 
     function spawnStar(isItem) {
         let nx, ny, tooClose, attempts = 0;
-        do {
-            nx = Math.random()*(canvas.width-200)+100; ny = Math.random()*(canvas.height-200)+100;
-            tooClose = points.some(p => Math.hypot(p.x-nx, p.y-ny) < 70);
-            attempts++;
+        do { nx = Math.random()*(canvas.width-200)+100; ny = Math.random()*(canvas.height-200)+100;
+             tooClose = points.some(p => Math.hypot(p.x-nx, p.y-ny) < 70); attempts++;
         } while(tooClose && attempts < 50);
         if(attempts < 50) {
             let r = Math.random();
@@ -130,13 +96,13 @@
     }
 
     function isInsideAnyTriangle(px, py) {
-        const getArea = (x1, y1, x2, y2, x3, y3) => Math.abs((x1*(y2-y3) + x2*(y3-y1) + x3*(y1-y2))/2);
+        const getArea = (x1,y1,x2,y2,x3,y3) => Math.abs((x1*(y2-y3)+x2*(y3-y1)+x3*(y1-y2))/2);
         return triangles.some(t => {
             let A = getArea(t.p1.x, t.p1.y, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
             let A1 = getArea(px, py, t.p1.x, t.p1.y, t.p2.x, t.p2.y);
             let A2 = getArea(px, py, t.p2.x, t.p2.y, t.p3.x, t.p3.y);
             let A3 = getArea(px, py, t.p3.x, t.p3.y, t.p1.x, t.p1.y);
-            return Math.abs(A - (A1 + A2 + A3)) < 1.0;
+            return Math.abs(A - (A1+A2+A3)) < 1.0;
         });
     }
 
@@ -146,9 +112,8 @@
             points.forEach(p => {
                 if(p.isBomb || p.isHeart) {
                     let nx, ny, safe, att = 0;
-                    do {
-                        nx = Math.random()*(canvas.width-200)+100; ny = Math.random()*(canvas.height-200)+100;
-                        safe = !isInsideAnyTriangle(nx, ny); att++;
+                    do { nx = Math.random()*(canvas.width-200)+100; ny = Math.random()*(canvas.height-200)+100;
+                         safe = !isInsideAnyTriangle(nx, ny); att++;
                     } while(!safe && att < 30);
                     p.x = nx; p.y = ny;
                 }
@@ -175,29 +140,25 @@
 
     function attemptMove(p1, p2) {
         lines.push({p1, p2, player:currentPlayer});
-        let newTris = [];
+        let foundNew = false;
         points.forEach(p3 => {
             if(p3===p1 || p3===p2) return;
             const l1 = lines.find(ln => (ln.p1===p1 && ln.p2===p3)||(ln.p1===p3 && ln.p2===p1));
             const l2 = lines.find(ln => (ln.p1===p2 && ln.p2===p3)||(ln.p1===p3 && ln.p2===p2));
             if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
-                newTris.push({p1, p2, p3, player:currentPlayer, isBomb:(p1.isBomb||p2.isBomb||p3.isBomb), isHeart:(p1.isHeart||p2.isHeart||p3.isHeart), isCore:(p1.isCore||p2.isCore||p3.isCore), anim: 0});
-            }
-        });
-        if(newTris.length > 0) {
-            let mult = doubleScore[currentPlayer] ? 2 : 1, gotHeart = false;
-            newTris.forEach(t => {
+                let t = {p1, p2, p3, player:currentPlayer, isBomb:(p1.isBomb||p2.isBomb||p3.isBomb), isHeart:(p1.isHeart||p2.isHeart||p3.isHeart), isCore:(p1.isCore||p2.isCore||p3.isCore), anim: 0};
                 triangles.push(t);
+                foundNew = true;
+                let mult = doubleScore[currentPlayer] ? 2 : 1;
                 if(t.isBomb) { scores[currentPlayer] -= 5; addEffect("💣 BOOM!", "#ff3f34"); }
                 else { let base = t.isCore ? 30 : 10; scores[currentPlayer] += (base * mult); addEffect(`+${base*mult}${t.isCore?' ☀️':''}`, t.player===1?"#2ecc71":"#e74c3c"); }
-                if(t.isHeart) gotHeart = true;
+                if(t.isHeart) doubleScore[currentPlayer] = true;
                 if(currentPlayer === 1) skillGauge = Math.min(100, skillGauge + 25);
-            });
-            doubleScore[currentPlayer] = gotHeart; updateUI(); if(currentPlayer === 2) setTimeout(aiMove, 800);
-        } else {
-            doubleScore[currentPlayer] = false; currentPlayer = currentPlayer===1 ? 2 : 1;
-            itemSpawnedInTurn = false; updateUI(); if(currentPlayer===2) setTimeout(aiMove, 800);
-        }
+            }
+        });
+        if(!foundNew) { doubleScore[currentPlayer] = false; currentPlayer = (currentPlayer===1)?2:1; itemSpawnedInTurn=false; }
+        updateUI();
+        if(currentPlayer === 2 && !isGameOver) setTimeout(aiMove, 800);
     }
 
     function aiMove() {
@@ -220,52 +181,45 @@
     function updateUI() {
         document.getElementById('s1').innerText = scores[1]; document.getElementById('s2').innerText = scores[2];
         document.getElementById('skill-bar').style.width = skillGauge + "%";
-        const m = document.getElementById('mid-msg'); m.innerText = currentPlayer===1?"연맹군(USER) 차례":"제국군(AI) 차례"; m.style.color = currentPlayer===1?"#2ecc71":"#e74c3c";
+        const m = document.getElementById('mid-msg'); m.innerText = currentPlayer===1?"MY TURN":"AI TURN"; m.style.color = currentPlayer===1?"#2ecc71":"#e74c3c";
     }
 
     function drawLoop() {
-        frame++;
-        ctx.clearRect(0,0,canvas.width,canvas.height);
-        
-        // 삼각형 & 베리어
+        frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
-            let color = t.player === 1 ? '46, 204, 113' : '231, 76, 60';
-            ctx.fillStyle = `rgba(${color}, 0.15)`; ctx.fill();
-            ctx.strokeStyle = `rgba(${color}, ${0.5 + Math.sin(frame*0.1)*0.2})`; ctx.lineWidth = 3; ctx.stroke();
-            
+            let c = t.player === 1 ? '46, 204, 113' : '231, 76, 60';
+            ctx.fillStyle = `rgba(${c}, 0.15)`; ctx.fill();
+            ctx.strokeStyle = `rgba(${c}, ${0.4 + Math.sin(frame*0.1)*0.2})`; ctx.lineWidth = 3; ctx.stroke();
             if(t.anim < 1) t.anim += 0.05;
             let cx = (t.p1.x+t.p2.x+t.p3.x)/3, cy = (t.p1.y+t.p2.y+t.p3.y)/3;
-            ctx.save(); ctx.translate(cx, cy); ctx.scale(t.anim, t.anim); ctx.font = "40px Arial";
-            ctx.shadowBlur = 15; ctx.shadowColor = t.player === 1 ? "#2ecc71" : "#e74c3c";
-            ctx.fillText(t.player===1 ? "🛸" : "🛰️", -20, 15); ctx.restore();
+            ctx.save(); ctx.translate(cx, cy); ctx.scale(t.anim, t.anim); ctx.font = "35px Arial";
+            ctx.shadowBlur = 10; ctx.shadowColor = t.player===1?"#2ecc71":"#e74c3c";
+            ctx.fillText(t.player===1?"🛸":"🛰️", -18, 12); ctx.restore();
         });
-
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
-            ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
+            ctx.strokeStyle = l.player===1?'#2ecc71':'#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
-
         points.forEach(p => {
             ctx.save();
-            if(selectedPoint === p) ctx.filter = "invert(1) brightness(2) drop-shadow(0 0 10px white)";
+            if(selectedPoint === p) ctx.filter = "invert(1) brightness(2)";
             ctx.font = p.isCore ? "45px Arial" : "30px Arial";
-            ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), p.x-15, p.y+15);
+            ctx.fillText(p.isCore?"☀️":(p.isBomb?"💣":(p.isHeart?"💖":"✨")), p.x-15, p.y+15);
             ctx.restore();
         });
-
         effects.forEach((e,i) => {
             ctx.globalAlpha=e.a; ctx.fillStyle=e.c; ctx.font="bold 30px Arial"; ctx.textAlign="center";
             ctx.fillText(e.t, e.x, e.y); e.y-=1; e.a-=0.015; if(e.a<=0) effects.splice(i,1);
         });
         ctx.globalAlpha=1; ctx.textAlign="left";
-        if(!isGameOver) requestAnimationFrame(drawLoop);
+        requestAnimationFrame(drawLoop);
     }
 
     canvas.addEventListener('mousedown', e => {
         const p = points.find(pt => Math.hypot(pt.x-e.clientX, pt.y-e.clientY) < 35);
         if(p && currentPlayer===1) {
-            if(!selectedPoint) { selectedPoint = p; }
+            if(!selectedPoint) selectedPoint = p;
             else { if(canConnect(selectedPoint, p)) attemptMove(selectedPoint, p); selectedPoint = null; }
         } else { selectedPoint = null; }
     });
