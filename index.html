@@ -3,15 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.13.2 - 함대 전면전</title>
+    <title>우주전쟁 v0.0.13.3 - 풍예의 결단</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; }
+        
+        /* 메뉴 레이어 */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 100; text-align: center; background: rgba(0,0,0,0.5); }
         .rule-card { background: rgba(10, 10, 25, 0.95); padding: 25px; border-radius: 20px; border: 2px solid #3498db; max-width: 450px; box-shadow: 0 0 30px #3498db; }
+        
+        /* 버튼 스타일 */
         .menu-btn { padding: 12px; margin: 10px; font-size: 18px; font-weight: bold; border: 2px solid #3498db; background: transparent; color: #fff; border-radius: 5px; cursor: pointer; transition: 0.3s; width: 220px; }
         .menu-btn:hover { background: #3498db; box-shadow: 0 0 15px #3498db; }
+        
+        /* 인게임 버튼들 */
+        #ui-layer { position: absolute; top: 80px; right: 20px; z-index: 150; display: flex; flex-direction: column; gap: 10px; }
+        .side-btn { padding: 8px 15px; background: rgba(0,0,0,0.6); border: 1px solid #fff; color: #fff; border-radius: 5px; cursor: pointer; font-size: 14px; }
+        .side-btn:hover { background: rgba(255,255,255,0.2); }
+
         #skill-container { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 50; text-align: center; display: none; }
         #skill-bar-bg { width: 250px; height: 14px; background: rgba(255,255,255,0.1); border-radius: 10px; border: 1px solid #00ffcc; overflow: hidden; margin-top: 5px; }
         #skill-bar { width: 0%; height: 100%; background: linear-gradient(90deg, #00ffcc, #3498db); transition: 0.3s; box-shadow: 0 0 10px #00ffcc; }
@@ -22,24 +32,32 @@
 <body>
 
     <div id="game-bg"></div>
+    
+    <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
+
     <div id="rule-screen" class="overlay">
-        <h1>🌌 우주전쟁 v0.0.13.2</h1>
+        <h1>🌌 우주전쟁 v0.0.13.3</h1>
         <div class="rule-card">
-            <h2>🛡️ 베리어 및 함대 활성화</h2>
-            <ul style="text-align:left; font-size:15px; color:#ecf0f1; line-height:1.8;">
-                <li>🛸 **연맹 함대:** 삼각형 완성 시 푸른 베리어와 함께 출현</li>
-                <li>🛰️ **제국 함대:** 적군 삼각형 완성 시 붉은 베리어 가동</li>
-                <li>🌪️ **바람의 기술:** 폭탄/하트를 비점령 지역으로 워프</li>
-                <li>✨ **별 선택:** 클릭 시 별의 에너지가 반전되며 발광</li>
+            <h2>📜 작전 지침 복구 완료</h2>
+            <ul style="text-align:left; font-size:15px; color:#ecf0f1; line-height:1.6;">
+                <li>🎵 **사운드:** 배경음악 및 효과음 시스템 가동</li>
+                <li>🏳️ **항복:** 전세가 불리하면 언제든 작전 중단 가능</li>
+                <li>🛡️ **베리어:** 삼각형 완성 시 에너지 보호막 가동</li>
+                <li>🌪️ **바람:** [S]키로 아이템 비점령지로 텔레포트</li>
             </ul>
         </div>
-        <button class="menu-btn" onclick="showGame()">전투 모드로 진입</button>
+        <button class="menu-btn" onclick="showGame()">전투 개시</button>
     </div>
 
     <div id="ingame-ui">
-        <div class="score-box" style="color:#2ecc71; text-shadow:0 0 10px #2ecc71;">연맹: <span id="s1">0</span></div>
+        <div class="score-box" style="color:#2ecc71;">연맹: <span id="s1">0</span></div>
         <div id="mid-msg" style="font-weight:bold; font-size:24px;"></div>
-        <div class="score-box" style="color:#e74c3c; text-shadow:0 0 10px #e74c3c;">제국: <span id="s2">0</span></div>
+        <div class="score-box" style="color:#e74c3c;">제국: <span id="s2">0</span></div>
+    </div>
+
+    <div id="ui-layer" style="display:none;">
+        <button id="bgm-toggle" class="side-btn" onclick="toggleBGM()">🎵 BGM ON</button>
+        <button class="side-btn" style="border-color:#e74c3c; color:#e74c3c;" onclick="surrender()">🏳️ 작전 중단</button>
     </div>
 
     <div id="skill-container">
@@ -54,19 +72,44 @@
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=0, scores={1:0, 2:0}, isGameOver=false;
     let doubleScore={1:false, 2:false}, skillGauge=0, itemSpawnedInTurn=false, effects=[], frame = 0;
+    let audioCtx, bgm = document.getElementById('bgm'), isBGMPlaying = false;
 
     function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
+    // --- 사운드 제어 ---
+    function toggleBGM() {
+        if (!isBGMPlaying) {
+            bgm.play().catch(e => console.log("Audio play failed", e));
+            document.getElementById('bgm-toggle').innerText = "🔇 BGM OFF";
+            isBGMPlaying = true;
+        } else {
+            bgm.pause();
+            document.getElementById('bgm-toggle').innerText = "🎵 BGM ON";
+            isBGMPlaying = false;
+        }
+    }
+
+    function surrender() {
+        if(confirm("정말 전장에서 이탈하시겠습니까? (현재 점수가 초기화됩니다)")) {
+            location.reload();
+        }
+    }
+
     function showGame() {
         document.getElementById('rule-screen').style.display='none';
         document.getElementById('ingame-ui').style.display='flex';
+        document.getElementById('ui-layer').style.display='flex';
         document.getElementById('skill-container').style.display='block';
+        
+        // 사운드 초기 활성화 시도
+        toggleBGM();
         startGame(22);
     }
 
+    // --- 게임 로직 ---
     function startGame(count) {
-        currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; skillGauge=0;
+        currentPlayer = 1; points=[]; lines=[]; triangles=[]; scores={1:0,2:0}; skillGauge=0; isGameOver=false;
         points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true });
         for(let i=0; i<count-1; i++) spawnStar(false);
         setInterval(() => { if(!isGameOver && !itemSpawnedInTurn) { spawnStar(true); itemSpawnedInTurn=true; } }, 5000);
@@ -177,58 +220,40 @@
     function updateUI() {
         document.getElementById('s1').innerText = scores[1]; document.getElementById('s2').innerText = scores[2];
         document.getElementById('skill-bar').style.width = skillGauge + "%";
-        const m = document.getElementById('mid-msg'); m.innerText = (doubleScore[currentPlayer]?"💖 ":"") + (currentPlayer===1?"MY TURN":"AI TURN"); m.style.color = currentPlayer===1?"#2ecc71":"#e74c3c";
+        const m = document.getElementById('mid-msg'); m.innerText = currentPlayer===1?"연맹군(USER) 차례":"제국군(AI) 차례"; m.style.color = currentPlayer===1?"#2ecc71":"#e74c3c";
     }
 
     function drawLoop() {
         frame++;
         ctx.clearRect(0,0,canvas.width,canvas.height);
         
-        // 1. 삼각형 & 베리어 이펙트
+        // 삼각형 & 베리어
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
-            
-            // 베리어 내부 에너지 흐름 효과
-            let grad = ctx.createRadialGradient((t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3, 0, (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3, 100);
             let color = t.player === 1 ? '46, 204, 113' : '231, 76, 60';
-            grad.addColorStop(0, `rgba(${color}, 0.2)`);
-            grad.addColorStop(1, `rgba(${color}, 0.05)`);
-            ctx.fillStyle = grad; ctx.fill();
-
-            // 베리어 테두리 발광
-            ctx.strokeStyle = `rgba(${color}, ${0.5 + Math.sin(frame*0.1)*0.2})`;
-            ctx.lineWidth = 3; ctx.stroke();
+            ctx.fillStyle = `rgba(${color}, 0.15)`; ctx.fill();
+            ctx.strokeStyle = `rgba(${color}, ${0.5 + Math.sin(frame*0.1)*0.2})`; ctx.lineWidth = 3; ctx.stroke();
             
-            // 함대 배치 애니메이션
             if(t.anim < 1) t.anim += 0.05;
             let cx = (t.p1.x+t.p2.x+t.p3.x)/3, cy = (t.p1.y+t.p2.y+t.p3.y)/3;
-            ctx.save();
-            ctx.translate(cx, cy);
-            ctx.scale(t.anim, t.anim);
-            ctx.font = "40px Arial";
+            ctx.save(); ctx.translate(cx, cy); ctx.scale(t.anim, t.anim); ctx.font = "40px Arial";
             ctx.shadowBlur = 15; ctx.shadowColor = t.player === 1 ? "#2ecc71" : "#e74c3c";
-            ctx.fillText(t.player===1 ? "🛸" : "🛰️", -20, 15);
-            ctx.restore();
+            ctx.fillText(t.player===1 ? "🛸" : "🛰️", -20, 15); ctx.restore();
         });
 
-        // 2. 선 그리기
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
             ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
 
-        // 3. 별 그리기 및 반전 효과
         points.forEach(p => {
             ctx.save();
-            if(selectedPoint === p) {
-                ctx.filter = "invert(1) brightness(2) drop-shadow(0 0 10px white)";
-            }
+            if(selectedPoint === p) ctx.filter = "invert(1) brightness(2) drop-shadow(0 0 10px white)";
             ctx.font = p.isCore ? "45px Arial" : "30px Arial";
             ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), p.x-15, p.y+15);
             ctx.restore();
         });
 
-        // 4. 이펙트
         effects.forEach((e,i) => {
             ctx.globalAlpha=e.a; ctx.fillStyle=e.c; ctx.font="bold 30px Arial"; ctx.textAlign="center";
             ctx.fillText(e.t, e.x, e.y); e.y-=1; e.a-=0.015; if(e.a<=0) effects.splice(i,1);
