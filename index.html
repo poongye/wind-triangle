@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v0.0.13.9 - 풍예 에디션</title>
+    <title>우주전쟁 v0.0.14.0 - 풍예 에디션</title>
     <style>
         body { margin: 0; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; touch-action: none; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)), url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
@@ -35,25 +35,23 @@
     <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
 
     <div id="rule-screen" class="overlay">
-        <h1>🌌 우주전쟁 v0.0.13.9</h1>
+        <h1>🌌 우주전쟁 v0.0.14.0</h1>
         <div class="rule-card">
-            <h2>⚔️ 전장 재정비 완료</h2>
-            <p>선 통과 방지 규칙 복구 및 통합 시스템 가동</p>
+            <h2>⚖️ 공정한 전장 연합</h2>
+            <p>AI에게도 물리적 충돌 규칙이 엄격히 적용됩니다.</p>
             <button class="menu-btn" onclick="showGame()">전투 개시</button><br>
             <button class="menu-btn" style="border-color:#00ffcc; color:#00ffcc;" onclick="togglePatchNotes(true)">📋 패치 노트</button>
         </div>
     </div>
 
     <div id="patch-notes">
-        <h2 style="color:#00ffcc; border-bottom: 2px solid #00ffcc; padding-bottom: 10px;">📋 시스템 업데이트 기록</h2>
+        <h2 style="color:#00ffcc; border-bottom: 2px solid #00ffcc; padding-bottom: 10px;">📋 업데이트 기록</h2>
+        <div class="patch-ver">v0.0.14.0</div>
+        <div>- <b>AI 규칙 준수:</b> AI도 선 교차 및 별 통과 불가<br>- 전반적인 물리 판정 로직 최적화</div>
         <div class="patch-ver">v0.0.13.9</div>
-        <div>- <b>선 교차 불가 규칙(물리 엔진) 복구</b><br>- 누락된 로직 전수 검사 및 기능 보존</div>
+        <div>- 선 교차 불가 규칙 복구 및 시스템 보존</div>
         <div class="patch-ver">v0.0.13.8</div>
-        <div>- 패치 노트 메뉴 시스템 최초 도입<br>- 하단 UI 레이아웃 최적화</div>
-        <div class="patch-ver">v0.0.13.7</div>
-        <div>- 사운드 및 작전 중단 버튼 하단 이동<br>- 스킬 바 통합 컨트롤 대시보드</div>
-        <div class="patch-ver">v0.0.13.6</div>
-        <div>- 화면 정지 버그(Alpha값 오류) 수정<br>- 인게임 버전 표기 추가</div>
+        <div>- 패치 노트 메뉴 도입 및 하단 UI 최적화</div>
         <button class="menu-btn" style="width:100%; margin-top:20px;" onclick="togglePatchNotes(false)">닫기</button>
     </div>
 
@@ -72,7 +70,7 @@
         <button class="ctrl-btn quit-btn" onclick="if(confirm('포기하시겠습니까?')) location.reload()">🏳️ 포기</button>
     </div>
 
-    <div id="ver-tag">v0.0.13.9 (PungYe Edition)</div>
+    <div id="ver-tag">v0.0.14.0 (PungYe Edition)</div>
     <canvas id="gameCanvas"></canvas>
 
 <script>
@@ -111,7 +109,7 @@
         updateUI(); drawLoop();
     }
 
-    // 선 교차 체크 함수 (핵심 규칙)
+    // 선 교차 체크 함수
     function isIntersecting(p1, p2, p3, p4) {
         const cp = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
         const res1 = cp(p1, p2, p3) * cp(p1, p2, p4);
@@ -119,23 +117,26 @@
         return res1 < 0 && res2 < 0;
     }
 
+    // 통합 규칙 체크 함수 (플레이어와 AI 공용)
     function canConnect(p1, p2) {
-        if (p1 === p2) return false;
+        if (!p1 || !p2 || p1 === p2) return false;
+        // 1. 이미 연결된 선인지 확인
         if (lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
-        // 교차 검사 복구
+        // 2. 다른 선과 교차하는지 확인
         if (lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return false;
-        
-        // 선 위에 점이 있는지 검사
+        // 3. 선이 다른 점(별)을 통과하는지 확인
         return !points.some(p => {
             if (p === p1 || p === p2) return false;
             let d = Math.hypot(p2.x - p1.x, p2.y - p1.y);
             let d1 = Math.hypot(p.x - p1.x, p.y - p1.y);
             let d2 = Math.hypot(p.x - p2.x, p.y - p2.y);
-            return Math.abs(d - (d1 + d2)) < 0.5;
+            return Math.abs(d - (d1 + d2)) < 0.5; // 거리가 거의 같으면 선 위에 점이 있는 것
         });
     }
 
     function attemptMove(p1, p2) {
+        if (!canConnect(p1, p2)) return; // 안전장치
+
         lines.push({p1, p2, player:currentPlayer});
         let found = false;
         points.forEach(p3 => {
@@ -152,13 +153,22 @@
             }
         });
         if(!found) currentPlayer = currentPlayer===1 ? 2 : 1;
-        updateUI(); if(currentPlayer===2) setTimeout(aiMove, 800);
+        updateUI(); 
+        if(currentPlayer===2) setTimeout(aiMove, 800);
     }
 
     function aiMove() {
+        if (currentPlayer !== 2) return;
         let moves = [];
-        points.forEach((p1,i) => points.slice(i+1).forEach(p2 => { if(canConnect(p1,p2)) moves.push({p1,p2}); }));
-        if(moves.length > 0) {
+        // AI도 canConnect 함수를 통해 유효한 수만 탐색
+        for (let i = 0; i < points.length; i++) {
+            for (let j = i + 1; j < points.length; j++) {
+                if (canConnect(points[i], points[j])) {
+                    moves.push({ p1: points[i], p2: points[j] });
+                }
+            }
+        }
+        if (moves.length > 0) {
             let target = moves[Math.floor(Math.random()*moves.length)];
             attemptMove(target.p1, target.p2);
         }
@@ -175,8 +185,6 @@
 
     function drawLoop() {
         frame++; ctx.clearRect(0,0,canvas.width,canvas.height);
-        
-        // 삼각형 & 베리어 & 함대
         triangles.forEach(t => {
             ctx.save(); ctx.beginPath(); ctx.moveTo(t.p1.x,t.p1.y); ctx.lineTo(t.p2.x,t.p2.y); ctx.lineTo(t.p3.x,t.p3.y); ctx.closePath();
             ctx.fillStyle = t.player===1 ? 'rgba(46,204,113,0.12)' : 'rgba(231,76,60,0.12)'; ctx.fill();
@@ -185,14 +193,10 @@
             ctx.translate((t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3); ctx.scale(t.anim, t.anim);
             ctx.font = "30px Arial"; ctx.textAlign="center"; ctx.fillText(t.player===1?"🛸":"🛰️", 0, 10); ctx.restore();
         });
-
-        // 선
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x,l.p1.y); ctx.lineTo(l.p2.x,l.p2.y);
             ctx.strokeStyle = l.player===1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
-
-        // 별 & 선택 반전
         points.forEach(p => {
             ctx.save(); let s = (selectedPoint === p) ? 1.3 : 1.0;
             if(selectedPoint === p) ctx.filter = "invert(1) brightness(2)";
@@ -200,7 +204,6 @@
             ctx.font = p.isCore ? "45px Arial" : "30px Arial"; ctx.textAlign="center";
             ctx.fillText(p.isCore ? "☀️" : (p.isBomb ? "💣" : (p.isHeart ? "💖" : "✨")), 0, 10); ctx.restore();
         });
-
         requestAnimationFrame(drawLoop);
     }
 
