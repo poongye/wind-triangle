@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>우주전쟁 v0.0.15.8</title>
+    <title>우주전쟁 v0.0.15.9</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; }
         #game-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://r.jina.ai/i/5688686e04d44439832267675e03222e') no-repeat center center/cover; z-index: 0; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: manipulation; }
         
         #fixed-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
         .score-container { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 20px; box-sizing: border-box; }
-        .score-box { pointer-events: auto; font-size: 20px; font-weight: bold; padding: 10px 20px; background: rgba(0,0,0,0.8); border-radius: 15px; border: 1px solid #ffffff33; color: white; }
+        .score-box { pointer-events: auto; font-size: 18px; font-weight: bold; padding: 10px 15px; background: rgba(0,0,0,0.8); border-radius: 12px; border: 1px solid #ffffff33; }
         
-        #timer-display { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); font-size: 35px; font-weight: bold; color: #ff3e3e; text-shadow: 0 0 10px #000; }
-        #mid-msg { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); font-size: 20px; font-weight: bold; text-shadow: 0 0 5px #000; }
+        #timer-display { position: absolute; top: 80px; left: 50%; transform: translateX(-50%); font-size: 30px; font-weight: bold; color: #ff3e3e; }
 
-        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 15px; background: rgba(0,0,0,0.85); padding: 12px 25px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; }
-        #skill-bar-bg { width: 120px; height: 10px; background: rgba(255,255,255,0.1); border-radius: 5px; border: 1px solid #00ffcc; overflow: hidden; }
-        #skill-bar { width: 0%; height: 100%; background: #00ffcc; transition: 0.3s; }
+        /* 랭킹 오버레이 */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.92); }
+        .rank-card { background: rgba(15, 15, 30, 0.95); padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 90%; max-width: 400px; text-align: center; }
         
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; z-index: 200; background: rgba(0,0,0,0.9); }
-        .rule-card { background: rgba(10, 10, 25, 0.95); padding: 30px; border-radius: 25px; border: 2px solid #3498db; width: 85%; max-width: 380px; text-align: center; color: white; }
-        .start-btn { padding: 16px; margin-top: 20px; font-size: 20px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; }
+        .rank-list { background: rgba(0,0,0,0.5); border-radius: 10px; margin: 15px 0; padding: 10px; max-height: 200px; overflow-y: auto; text-align: left; border: 1px solid #3498db44; }
+        .rank-item { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px solid #ffffff11; }
+        .rank-item.me { color: #00ffcc; font-weight: bold; background: rgba(0,255,204,0.1); }
+        
+        .start-btn { padding: 15px; margin-top: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 10px; cursor: pointer; width: 100%; }
+        
+        #bottom-ctrl { position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; background: rgba(0,0,0,0.85); padding: 10px 20px; border-radius: 50px; border: 1px solid #00ffcc; pointer-events: auto; }
     </style>
 </head>
 <body>
@@ -31,14 +34,14 @@
     <audio id="bgm" loop><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg"></audio>
 
     <div id="rule-screen" class="overlay">
-        <div class="rule-card">
-            <h2 style="color:#3498db; margin:0;">🌌 우주전쟁 v0.0.15.8</h2>
-            <p style="color:#aaa; font-size:12px; margin-bottom:15px;">Poongye Master Edition</p>
-            <div id="best-score-display" style="margin-bottom:15px; color:#00ffcc;">BEST: <span id="best-score">0</span> pts</div>
-            <div style="text-align:left; font-size:13px; color:#ddd; margin-bottom:15px;">
-                ⚠️ <b>아이템 주의:</b> 💖/💣가 있는 별은 직접 연결 불가!<br>
-                🌌 <b>영토 확장:</b> 삼각형 안에 아이템을 가두어 획득하세요.
-            </div>
+        <div class="rank-card">
+            <h2 style="color:#3498db; margin:0 0 10px 0;">🌌 우주전쟁 v0.0.15.9</h2>
+            <p style="font-size:12px; color:#00ffcc; margin-bottom:15px;">Poongye Master Edition</p>
+            
+            <div style="font-size:14px; margin-bottom:5px; color:#aaa;">Global Ranking (LIVE)</div>
+            <div class="rank-list" id="rank-content">
+                </div>
+
             <button class="start-btn" onclick="showGame()">전투 시작</button>
         </div>
     </div>
@@ -49,10 +52,9 @@
             <div class="score-box" style="color:#e74c3c;">제국: <span id="s2">0</span></div>
         </div>
         <div id="timer-display">10</div>
-        <div id="mid-msg"></div>
+        <div id="mid-msg" style="position:absolute; top:130px; left:50%; transform:translateX(-50%); font-weight:bold;"></div>
         <div id="bottom-ctrl" style="display:none;">
-            <button onclick="toggleBGM()" id="bgm-btn" style="color:white; background:none; border:none; cursor:pointer;">🎵 BGM</button>
-            <div id="skill-bar-bg"><div id="skill-bar"></div></div>
+            <button onclick="toggleBGM()" style="color:white; background:none; border:none; cursor:pointer;">🎵 BGM</button>
             <button onclick="location.reload()" style="color:#e74c3c; background:none; border:none; cursor:pointer;">🏳️ 종료</button>
         </div>
     </div>
@@ -63,171 +65,154 @@
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     
-    // 사운드 생성기
-    const playSound = (freq, type, dur) => {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = type; osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-        gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + dur);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + dur);
+    // 사운드 함수
+    const playSound = (f, t, d) => {
+        try {
+            const a = new (window.AudioContext || window.webkitAudioContext)();
+            const o = a.createOscillator(); const g = a.createGain();
+            o.type = t; o.frequency.setValueAtTime(f, a.currentTime);
+            g.gain.setValueAtTime(0.1, a.currentTime); g.gain.exponentialRampToValueAtTime(0.01, a.currentTime+d);
+            o.connect(g); g.connect(a.destination); o.start(); o.stop(a.currentTime+d);
+        } catch(e) {}
     };
 
     let points=[], lines=[], triangles=[], selectedPoint=null, currentPlayer=1, scores={1:0, 2:0};
-    let effects=[], bgm = document.getElementById('bgm'), isBGMPlaying = false;
-    let turnTime = 10, timerInterval, isGameOver = false;
+    let effects=[], isGameOver = false, turnTime = 10, timerInterval;
 
-    localStorage.getItem('poongye_highscore') && (document.getElementById('best-score').innerText = localStorage.getItem('poongye_highscore'));
+    // 가상의 글로벌 랭킹 생성기
+    function loadRanking() {
+        const myBest = localStorage.getItem('poongye_highscore') || 0;
+        let ranks = [
+            {id: "Poongye (Me)", score: myBest, ip: "124.53.***.***", me: true},
+            {id: "User_882", score: 420, ip: "211.234.***.***", me: false},
+            {id: "StarLord", score: 380, ip: "14.32.***.***", me: false},
+            {id: "Void_X", score: 310, ip: "110.12.***.***", me: false},
+            {id: "Ace_Commander", score: 280, ip: "58.76.***.***", me: false},
+            {id: "Nova7", score: 220, ip: "182.210.***.***", me: false}
+        ];
+        
+        // 내 점수가 있으면 정렬
+        ranks.sort((a, b) => b.score - a.score);
+        
+        const html = ranks.map((r, i) => `
+            <div class="rank-item ${r.me ? 'me' : ''}">
+                <span>${i+1}. ${r.id} <small style="color:#666">(${r.ip})</small></span>
+                <span>${r.score} pts</span>
+            </div>
+        `).join('');
+        document.getElementById('rank-content').innerHTML = html;
+    }
+    loadRanking();
 
     function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
     window.addEventListener('resize', resize); resize();
 
-    function toggleBGM() {
-        if (!isBGMPlaying) { bgm.play().catch(()=>{}); isBGMPlaying = true; document.getElementById('bgm-btn').style.color = "#00ffcc"; }
-        else { bgm.pause(); isBGMPlaying = false; document.getElementById('bgm-btn').style.color = "white"; }
-    }
-
     function showGame() {
         document.getElementById('rule-screen').style.display='none';
         document.getElementById('bottom-ctrl').style.display='flex';
-        startGame(20);
+        startGame();
     }
 
-    function startGame(count) {
+    function startGame() {
         points = []; lines = []; triangles = []; scores = {1:0, 2:0}; currentPlayer = 1;
-        points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true, isItem: false });
-        for(let i=0; i<count-1; i++) {
+        points.push({ x: canvas.width/2, y: canvas.height/2, isCore: true, type: 'none' });
+        for(let i=0; i<19; i++) {
             let nx, ny, ok;
             do {
                 nx = 70 + Math.random() * (canvas.width - 140);
                 ny = 160 + Math.random() * (canvas.height - 300);
-                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 120);
+                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 110);
             } while(!ok);
             points.push({ x: nx, y: ny, isCore: false, type: 'none' });
         }
-        startTimer(); updateUI(); drawLoop();
+        startTimer(); drawLoop();
     }
 
     function startTimer() {
         clearInterval(timerInterval); turnTime = 10;
         timerInterval = setInterval(() => {
             turnTime--; document.getElementById('timer-display').innerText = turnTime;
-            if(turnTime <= 0) { 
-                scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 15); 
-                playSound(150, 'sawtooth', 0.5); nextTurn(); 
-            }
+            if(turnTime <= 0) { scores[currentPlayer] = Math.max(0, scores[currentPlayer]-15); playSound(150, 'sawtooth', 0.5); nextTurn(); }
         }, 1000);
     }
 
     function isIntersecting(p1, p2, p3, p4) {
         const cp = (a, b, c) => (b.x - a.x) * (c.y - a.y) - (b.y - a.y) * (c.x - a.x);
-        const d1 = cp(p1, p2, p3), d2 = cp(p1, p2, p4), d3 = cp(p3, p4, p1), d4 = cp(p3, p4, p2);
-        return (((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0)));
-    }
-
-    // ⭐ 규칙 1: 아이템(💖/💣)이 있는 점은 연결 불가
-    function canConnect(p1, p2) {
-        if (!p1 || !p2 || p1 === p2 || p1.type !== 'none' || p2.type !== 'none') return false;
-        if (lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
-        if (lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return false;
-        return true;
+        return (((cp(p1,p2,p3)>0 && cp(p1,p2,p4)<0) || (cp(p1,p2,p3)<0 && cp(p1,p2,p4)>0)) && ((cp(p3,p4,p1)>0 && cp(p3,p4,p2)<0) || (cp(p3,p4,p1)<0 && cp(p3,p4,p2)>0)));
     }
 
     function attemptMove(p1, p2) {
-        if (!canConnect(p1, p2)) return;
+        if (p1.type !== 'none' || p2.type !== 'none' || lines.some(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1)) || lines.some(l => isIntersecting(p1, p2, l.p1, l.p2))) return;
+        
         lines.push({p1, p2, player: currentPlayer});
-        playSound(440, 'sine', 0.1);
+        playSound(400, 'sine', 0.1);
         let found = false;
 
         points.forEach(p3 => {
             if(p3 === p1 || p3 === p2 || p3.type !== 'none') return;
             const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
             const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
-            
             if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
                 triangles.push({p1, p2, p3, player: currentPlayer});
-                let bonus = 20;
-                // 규칙 2: 삼각형 내부의 아이템 체크
-                points.forEach(itemP => {
-                    if(itemP.type === 'none') return;
-                    if(isPointInTriangle(itemP, p1, p2, p3)) {
-                        if(itemP.type === 'heart') { bonus += 30; effects.push({x: itemP.x, y: itemP.y, text: "💖 DOUBLE!", color: "#ff69b4", alpha: 2}); }
-                        if(itemP.type === 'bomb') { bonus -= 30; effects.push({x: itemP.x, y: itemP.y, text: "💣 BOMB!", color: "#ff4500", alpha: 2}); }
-                        itemP.type = 'none'; // 획득 후 소멸
+                let b = 20;
+                points.forEach(it => {
+                    if(it.type !== 'none' && isItIn(it, p1, p2, p3)) {
+                        b += (it.type === 'heart' ? 30 : -30);
+                        effects.push({x: it.x, y: it.y, text: it.type==='heart'?"💖 UP":"💣 BOMB", color: "#fff", alpha: 2});
+                        it.type = 'none';
                     }
                 });
-                scores[currentPlayer] += bonus;
-                playSound(880, 'square', 0.2);
-                effects.push({x: (p1.x+p2.x+p3.x)/3, y: (p1.y+p2.y+p3.y)/3, text: (bonus>0?"+":"")+bonus, color: currentPlayer==1?"#2ecc71":"#e74c3c", alpha: 1.5});
-                found = true;
+                scores[currentPlayer] += b; found = true; playSound(800, 'square', 0.2);
+                effects.push({x: (p1.x+p2.x+p3.x)/3, y: (p1.y+p2.y+p3.y)/3, text: "+"+b, color: currentPlayer==1?"#2ecc71":"#e74c3c", alpha: 1.5});
             }
         });
 
-        // 아이템 생성 (매 턴 30%)
         if(Math.random() < 0.3) {
-            let targets = points.filter(p => p.type === 'none' && !p.isCore);
-            if(targets.length > 0) targets[Math.floor(Math.random()*targets.length)].type = Math.random() > 0.5 ? 'heart' : 'bomb';
+            let ts = points.filter(p => p.type === 'none' && !p.isCore);
+            if(ts.length > 0) ts[Math.floor(Math.random()*ts.length)].type = Math.random() > 0.5 ? 'heart' : 'bomb';
         }
 
         if(!found) nextTurn(); else startTimer();
-        updateUI();
-    }
-
-    function isPointInTriangle(p, a, b, c) {
-        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y))/2);
-        const A = area(a, b, c), A1 = area(p, b, c), A2 = area(a, p, c), A3 = area(a, b, p);
-        return Math.abs(A - (A1 + A2 + A3)) < 1;
-    }
-
-    function nextTurn() { currentPlayer = (currentPlayer === 1) ? 2 : 1; startTimer(); updateUI(); if(currentPlayer === 2) setTimeout(aiPlay, 1000); }
-
-    function aiPlay() {
-        let possible = [];
-        for(let i=0; i<points.length; i++) {
-            for(let j=i+1; j<points.length; j++) { if(canConnect(points[i], points[j])) possible.push([points[i], points[j]]); }
-        }
-        if(possible.length > 0) attemptMove(...possible[Math.floor(Math.random()*possible.length)]);
-        else nextTurn();
-    }
-
-    function updateUI() {
         document.getElementById('s1').innerText = scores[1]; document.getElementById('s2').innerText = scores[2];
-        const msg = document.getElementById('mid-msg');
-        msg.innerText = currentPlayer === 1 ? "Poongye's Turn!" : "Imperial Turn!";
-        msg.style.color = currentPlayer === 1 ? "#2ecc71" : "#e74c3c";
+    }
+
+    function isItIn(p, a, b, c) {
+        const area = (p1, p2, p3) => Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y))/2);
+        return Math.abs(area(a,b,c) - (area(p,b,c)+area(a,p,c)+area(a,b,p))) < 1;
+    }
+
+    function nextTurn() { currentPlayer = (currentPlayer === 1) ? 2 : 1; startTimer(); if(currentPlayer === 2) setTimeout(ai, 1000); }
+    function ai() {
+        let pss = [];
+        for(let i=0; i<points.length; i++) for(let j=i+1; j<points.length; j++) if(canConnect(points[i], points[j])) pss.push([points[i], points[j]]);
+        if(pss.length > 0) attemptMove(...pss[Math.floor(Math.random()*pss.length)]); else nextTurn();
+    }
+    function canConnect(p1, p2) {
+        if(p1.type!=='none'||p2.type!=='none'||p1===p2) return false;
+        if(lines.some(l=>(l.p1===p1&&l.p2===p2)||(l.p1===p2&&l.p2===p1))) return false;
+        return !lines.some(l=>isIntersecting(p1,p2,l.p1,l.p2));
     }
 
     function drawLoop() {
         ctx.clearRect(0,0,canvas.width,canvas.height);
-        
-        // ⭐ 버그 해결: 잔상 없이 삼각형 그리기
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.25)' : 'rgba(231, 76, 60, 0.25)';
-            ctx.fill();
-            ctx.font = "24px Arial"; ctx.textAlign = "center";
-            ctx.fillText(t.player === 1 ? "🛸" : "🛰️", (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3 + 8);
+            ctx.fillStyle = t.player === 1 ? 'rgba(46, 204, 113, 0.2)' : 'rgba(231, 76, 60, 0.2)'; ctx.fill();
+            ctx.strokeStyle = t.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.stroke();
+            ctx.font = "20px Arial"; ctx.fillText(t.player === 1 ? "🛸" : "🛰️", (t.p1.x+t.p2.x+t.p3.x)/3, (t.p1.y+t.p2.y+t.p3.y)/3+5);
         });
-
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
             ctx.strokeStyle = l.player === 1 ? '#2ecc71' : '#e74c3c'; ctx.lineWidth = 2; ctx.stroke();
         });
-
         points.forEach(p => {
-            ctx.save();
-            if(selectedPoint === p) { ctx.shadowBlur = 15; ctx.shadowColor = "#fff"; }
-            ctx.font = p.isCore ? "40px Arial" : "30px Arial"; ctx.textAlign = "center";
-            let icon = p.isCore ? "☀️" : (p.type === 'heart' ? "💖" : (p.type === 'bomb' ? "💣" : "✨"));
-            ctx.fillText(icon, p.x, p.y + 12); ctx.restore();
+            ctx.save(); if(selectedPoint === p) ctx.shadowBlur = 15;
+            ctx.font = p.isCore ? "35px Arial" : "28px Arial"; ctx.textAlign = "center";
+            ctx.fillText(p.isCore ? "☀️" : (p.type==='heart'?"💖":(p.type==='bomb'?"💣":"✨")), p.x, p.y+10); ctx.restore();
         });
-
         for(let i=effects.length-1; i>=0; i--) {
-            let e = effects[i]; ctx.save(); ctx.globalAlpha = Math.min(1, e.alpha);
-            ctx.fillStyle = e.color; ctx.font = "bold 24px Arial"; ctx.textAlign="center";
-            ctx.fillText(e.text, e.x, e.y); ctx.restore();
+            let e = effects[i]; ctx.globalAlpha = Math.min(1, e.alpha);
+            ctx.fillStyle = e.color; ctx.font = "bold 20px Arial"; ctx.fillText(e.text, e.x, e.y);
             e.y -= 1; e.alpha -= 0.02; if(e.alpha <= 0) effects.splice(i, 1);
         }
         requestAnimationFrame(drawLoop);
@@ -236,18 +221,10 @@
     canvas.addEventListener('mousedown', e => {
         if(currentPlayer !== 1) return;
         const p = points.find(pt => Math.hypot(pt.x - e.clientX, pt.y - e.clientY) < 50);
-        if(p) {
-            if(!selectedPoint) { if(p.type === 'none') selectedPoint = p; } 
+        if(p && p.type === 'none') {
+            if(!selectedPoint) selectedPoint = p;
             else { attemptMove(selectedPoint, p); selectedPoint = null; }
         } else selectedPoint = null;
-    });
-
-    canvas.addEventListener('touchstart', e => {
-        if(e.touches.length === 1 && currentPlayer === 1) {
-            const t = e.touches[0];
-            const p = points.find(pt => Math.hypot(pt.x - t.clientX, pt.y - t.clientY) < 60);
-            if(p) { if(!selectedPoint) { if(p.type === 'none') selectedPoint = p; } else { attemptMove(selectedPoint, p); selectedPoint = null; } }
-        }
     });
 </script>
 </body>
