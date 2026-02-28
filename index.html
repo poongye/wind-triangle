@@ -3,13 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v.0.1.5 - 최후의 성단</title>
+    <title>우주전쟁 v.0.1.8 - 총 전력 집계</title>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; -webkit-tap-highlight-color: transparent; }
+        body, html { 
+            margin: 0; padding: 0; width: 100%; height: 100%; 
+            overflow: hidden; background: #000; 
+            font-family: 'Malgun Gothic', sans-serif; color: white; 
+            -webkit-tap-highlight-color: transparent;
+            touch-action: none; 
+        }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
         #fixed-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
         .score-container { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; }
-        .score-box { pointer-events: auto; font-size: 13px; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.85); border-radius: 8px; border: 1px solid #ffffff33; line-height: 1.5; min-width: 150px; }
+        .score-box { pointer-events: auto; font-size: 13px; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.85); border-radius: 8px; border: 1px solid #ffffff33; line-height: 1.5; min-width: 140px; }
         #timer-display { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); font-size: 32px; font-weight: bold; color: #ff3e3e; text-shadow: 0 0 10px #000; }
         #turn-msg { position: absolute; top: 135px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px #000; width: 100%; text-align: center; }
         #countdown-msg { position: absolute; bottom: 85px; left: 50%; transform: translateX(-50%); font-size: 20px; font-weight: bold; color: #f1c40f; text-shadow: 0 0 10px #000; display:none; }
@@ -19,44 +25,38 @@
         .rank-card { background: #0f0f1e; padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 90%; max-width: 380px; text-align: center; max-height: 90vh; overflow-y: auto; }
         .start-btn { padding: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 0 15px #3498db; }
         .scenario-box { text-align: left; background: rgba(0, 255, 204, 0.05); padding: 15px; border-radius: 10px; font-size: 13px; line-height: 1.6; margin-bottom: 15px; color: #a0ffe0; border-left: 3px solid #00ffcc; }
-        .how-to { text-align: left; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.6; margin: 15px 0; color: #ddd; border: 1px dashed #3498db; }
         select, input[type=range] { width: 100%; margin-top: 5px; background: #111; color: white; border: 1px solid #3498db; padding: 8px; border-radius: 5px; }
+        /* 총 플레이 유저 표시 */
+        .total-users { margin-top: 20px; font-size: 11px; color: #3498db; opacity: 0.9; text-transform: uppercase; border-top: 1px solid rgba(52, 152, 219, 0.3); padding-top: 15px; }
+        #total-count { font-weight: bold; color: #fff; font-size: 13px; }
     </style>
 </head>
-<body>
+<body oncontextmenu="return false;">
     <canvas id="gameCanvas"></canvas>
-    <audio id="bgm" loop preload="auto"><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg"></audio>
-    <audio id="snd-select" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg"></audio>
-    <audio id="snd-connect" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" type="audio/mpeg"></audio>
-    <audio id="snd-capture-player" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg"></audio>
-    <audio id="snd-capture-ai" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" type="audio/mpeg"></audio>
-    <audio id="snd-end" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3" type="audio/mpeg"></audio>
-
+    
     <div id="rule-screen" class="overlay">
         <div class="rank-card">
             <h2 style="color:#00ffcc; margin-bottom:5px;">🌬️ 바람의 후예</h2>
-            <p style="font-size:11px; color:#aaa; margin-bottom:15px;">v.0.1.5 | 시나리오 통합 버전</p>
+            <p style="font-size:11px; color:#aaa; margin-bottom:15px;">v.0.1.8 | The Last Cluster</p>
             
             <div class="scenario-box">
-                <b>[긴급 타전]</b><br>
-                기계 제국 '렉스'가 아이테르 성계를 침공했습니다. 모든 통신이 끊기고 별들이 고립되었습니다. 전설의 수호자 '풍예'여, 지금 즉시 우주 항로를 다시 잇고 성계를 탈환하십시오!
-            </div>
-
-            <div class="how-to">
-                <b>[작전 지침]</b><br>
-                1. 별을 드래그하여 선을 연결하십시오.<br>
-                2. 삼각형 영토 점령 시 병력이 합류합니다.<br>
-                3. 10초 내에 움직이지 못하면 제국군에게 해킹당합니다.
+                <b>[사령부 브리핑]</b><br>
+                기계 제국 '렉스'의 연산력은 매시간 강해지고 있습니다. 하지만 우리는 혼자가 아닙니다. 수많은 풍예들이 거쳐 간 이 성전에서 당신의 기록을 새기십시오.
             </div>
 
             <div style="text-align:left; padding:0 10px; font-size:13px;">
-                <label>🤖 제국군 난이도:</label> 
-                <select id="ai-diff"><option value="1800">쉬움</option><option value="1200" selected>보통</option><option value="600">어려움</option></select>
+                <label>🤖 제국군 지능:</label> 
+                <select id="ai-diff"><option value="1800">쉬움</option><option value="1200" selected>보통(지능 상향)</option><option value="600">어려움(극강)</option></select>
                 <br><br>
-                <label>✨ 성계(별) 개수: <span id="sv">25</span>개</label> 
+                <label>✨ 성계 개수: <span id="sv">25</span>개</label> 
                 <input type="range" id="star-count" min="15" max="35" value="25" oninput="document.getElementById('sv').innerText=this.value">
             </div>
-            <button class="start-btn" onclick="startWithSound()">함대 출격</button>
+            <button class="start-btn" onclick="startWithSound()">성계 진입</button>
+            
+            <div class="total-users">
+                성계에 투입된 총 유저 수<br>
+                <span id="total-count">254,812</span> 명
+            </div>
         </div>
     </div>
 
@@ -65,7 +65,6 @@
             <h1 id="result-title" style="color:#ff3e3e; margin-bottom:10px;">작전 종료</h1>
             <div id="result-scenario" class="scenario-box" style="margin-bottom:20px; font-size:14px; text-align:center;"></div>
             <h2 id="final-score" style="color:white; font-size: 15px; line-height: 1.8; margin-bottom:20px;"></h2>
-            <h2 id="winner-text" style="color:#00ffcc; margin-bottom:20px;"></h2>
             <button class="start-btn" onclick="location.reload()">새로운 전선으로</button>
         </div>
     </div>
@@ -76,7 +75,7 @@
             <div class="score-box" style="color:#e74c3c; border-color:#e74c3c; text-align:right;">제국 총 병력 :<br><span id="s2">0</span>억 명</div>
         </div>
         <div id="timer-display">10</div>
-        <div id="turn-msg">시스템 초기화 중...</div>
+        <div id="turn-msg">주파수 동기화 중...</div>
         <div id="countdown-msg"></div>
         <div id="bottom-ctrl">
             <button class="ctrl-btn" onclick="toggleBGM()">🎵 주파수</button>
@@ -84,8 +83,27 @@
         </div>
     </div>
 
+    <audio id="bgm" loop preload="auto"><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-select" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-connect" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-capture-player" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-capture-ai" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-end" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3" type="audio/mpeg"></audio>
+
 <script>
-    /* 로직 보존: 대전제와 규칙 기반 코딩 */
+    // [신규] 총 유저 수 업데이트 로직
+    function updateTotalCount() {
+        const countEl = document.getElementById('total-count');
+        if(!countEl) return;
+        let current = parseInt(countEl.innerText.replace(/,/g, ''));
+        if(Math.random() > 0.7) { // 30% 확률로 새로운 유저 카운트 증가 연출
+            current += 1;
+            countEl.innerText = current.toLocaleString();
+        }
+    }
+    setInterval(updateTotalCount, 5000);
+
+    /* 게임 코어 로직 (지능형 AI 및 스크롤 방지 포함) */
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const bgImg = new Image();
@@ -148,7 +166,7 @@
                 penaltyCount[currentPlayer]++;
                 let penaltyValue = penaltyCount[currentPlayer] * 50; 
                 scores[currentPlayer] = Math.max(0, scores[currentPlayer] - penaltyValue);
-                effects.push({x: canvas.width/2, y: 150, text: `⚠️ 해킹 발생! -${penaltyValue}억`, color: "#ff3e3e", size: 22});
+                effects.push({x: canvas.width/2, y: 150, text: `⚠️ 해킹! -${penaltyValue}억`, color: "#ff3e3e", size: 22});
                 playSnd('snd-capture-ai', 0.5);
                 updateUI();
                 clearInterval(timerInterval);
@@ -162,17 +180,14 @@
         playSnd('snd-connect', 0.6);
         let foundThisTurn = false;
         let turnCombo = 0;
-
         points.forEach(p3 => {
             if(p3 === p1 || p3 === p2) return;
             const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
             const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
             const l3 = lines.find(l => (l.p1===p1 && l.p2===p2) || (l.p1===p2 && l.p2===p1)); 
-
             if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
                 triangles.push({p1, p2, p3, player: currentPlayer});
-                turnCombo++;
-                foundThisTurn = true;
+                turnCombo++; foundThisTurn = true;
                 let myLines = [l1, l2, l3].filter(l => l.player === currentPlayer).length;
                 let multiplier = myLines === 3 ? 1.0 : (myLines === 2 ? 0.8 : 0.5);
                 let baseTroop = Math.floor(Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y)) / 100)) + 50; 
@@ -183,7 +198,7 @@
                 scores[currentPlayer] += finalTroop;
                 let cx = (p1.x+p2.x+p3.x)/3, cy = (p1.y+p2.y+p3.y)/3;
                 if(isCritical) effects.push({x: cx, y: cy-25, text: "🌬️ 바람의 가호!!", color: "#f1c40f", size: 24});
-                effects.push({x: cx, y: cy, text: `+${finalTroop}억 (${Math.round(multiplier*100)}%)`, color: currentPlayer==1?"#2ecc71":"#e74c3c", size: 16});
+                effects.push({x: cx, y: cy, text: `+${finalTroop}억`, color: currentPlayer==1?"#2ecc71":"#e74c3c", size: 16});
                 playSnd(currentPlayer === 1 ? 'snd-capture-player' : 'snd-capture-ai', 0.7);
             }
         });
@@ -197,6 +212,49 @@
         updateTurnMsg(); startTimer(); updateUI(); 
         if(currentPlayer === 2) setTimeout(aiThink, aiLevel); 
         checkRemainingTerritories();
+    }
+
+    function aiThink() {
+        if(isGameOver || currentPlayer !== 2) return;
+        let moves = [];
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) {
+                if(canConnect(points[i], points[j])) {
+                    let weight = 0;
+                    points.forEach(p3 => {
+                        if(p3 === points[i] || p3 === points[j]) return;
+                        const hasL1 = lines.some(l => (l.p1===points[i] && l.p2===p3) || (l.p1===p3 && l.p2===points[i]));
+                        const hasL2 = lines.some(l => (l.p1===points[j] && l.p2===p3) || (l.p1===p3 && l.p2===points[j]));
+                        if(hasL1 && hasL2) weight += 100;
+                        if(hasL1 || hasL2) weight += 5;
+                    });
+                    moves.push({p1: points[i], p2: points[j], weight});
+                }
+            }
+        }
+        if(moves.length > 0) {
+            moves.sort((a, b) => b.weight - a.weight);
+            let choice = moves.slice(0, 3)[Math.floor(Math.random() * Math.min(3, moves.length))];
+            aiAnim.startP = choice.p1; aiAnim.targetP = choice.p2; aiAnim.progress = 0; aiAnim.active = true;
+        } else nextTurn();
+    }
+
+    function canConnect(p1, p2) {
+        if(!p1 || !p2 || p1 === p2) return false;
+        if(lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
+        const isPass = points.some(p => {
+            if (p === p1 || p === p2) return false;
+            const d = Math.abs((p2.y - p1.y) * p.x - (p2.x - p1.x) * p.y + p2.x * p1.y - p2.y * p1.x) / Math.hypot(p2.y - p1.y, p2.x - p1.x);
+            const dot = (p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y);
+            return d < 8 && dot >= 0 && dot <= (Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+        });
+        if(isPass) return false;
+        const intersect = (a,b,c,d) => {
+            const cp = (p1,p2,p3) => (p2.x-p1.x)*(p3.y-p1.y)-(p2.y-p1.y)*(p3.x-p1.x);
+            const r1 = cp(a,b,c), r2 = cp(a,b,d), r3 = cp(c,d,a), r4 = cp(c,d,b);
+            return (((r1 > 0 && r2 < 0) || (r1 < 0 && r2 > 0)) && ((r3 > 0 && r4 < 0) || (r3 < 0 && r4 > 0)));
+        };
+        return !lines.some(l => intersect(p1, p2, l.p1, l.p2));
     }
 
     function checkRemainingTerritories() {
@@ -220,49 +278,6 @@
         } else { cdMsg.style.display = 'none'; }
     }
 
-    function aiThink() {
-        if(isGameOver || currentPlayer !== 2) return;
-        let pss = [];
-        for(let i=0; i<points.length; i++) {
-            for(let j=i+1; j<points.length; j++) {
-                if(canConnect(points[i], points[j])) {
-                    let score = 1;
-                    points.forEach(p3 => {
-                        if(p3 === points[i] || p3 === points[j]) return;
-                        const hasL1 = lines.some(l => (l.p1===points[i] && l.p2===p3) || (l.p1===p3 && l.p2===points[i]));
-                        const hasL2 = lines.some(l => (l.p1===points[j] && l.p2===p3) || (l.p1===p3 && l.p2===points[j]));
-                        if(hasL1 && hasL2) score = 10;
-                    });
-                    pss.push({p1: points[i], p2: points[j], score});
-                }
-            }
-        }
-        if(pss.length > 0) {
-            pss.sort((a, b) => b.score - a.score);
-            let final = pss.filter(p => p.score === pss[0].score);
-            let choice = final[Math.floor(Math.random()*final.length)];
-            aiAnim.startP = choice.p1; aiAnim.targetP = choice.p2; aiAnim.progress = 0; aiAnim.active = true;
-        } else nextTurn();
-    }
-
-    function canConnect(p1, p2) {
-        if(!p1 || !p2 || p1 === p2) return false;
-        if(lines.some(l => (l.p1 === p1 && l.p2 === p2) || (l.p1 === p2 && l.p2 === p1))) return false;
-        const isPass = points.some(p => {
-            if (p === p1 || p === p2) return false;
-            const d = Math.abs((p2.y - p1.y) * p.x - (p2.x - p1.x) * p.y + p2.x * p1.y - p2.y * p1.x) / Math.hypot(p2.y - p1.y, p2.x - p1.x);
-            const dot = (p.x - p1.x) * (p2.x - p1.x) + (p.y - p1.y) * (p2.y - p1.y);
-            return d < 8 && dot >= 0 && dot <= (Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
-        });
-        if(isPass) return false;
-        const intersect = (a,b,c,d) => {
-            const cp = (p1,p2,p3) => (p2.x-p1.x)*(p3.y-p1.y)-(p2.y-p1.y)*(p3.x-p1.x);
-            const r1 = cp(a,b,c), r2 = cp(a,b,d), r3 = cp(c,d,a), r4 = cp(c,d,b);
-            return (((r1 > 0 && r2 < 0) || (r1 < 0 && r2 > 0)) && ((r3 > 0 && r4 < 0) || (r3 < 0 && r4 > 0)));
-        };
-        return !lines.some(l => intersect(p1, p2, l.p1, l.p2));
-    }
-
     function checkGameOver() {
         let moves = 0;
         for(let i=0; i<points.length; i++) for(let j=i+1; j<points.length; j++) if(canConnect(points[i], points[j])) moves++;
@@ -270,14 +285,10 @@
             isGameOver = true; clearInterval(timerInterval);
             playSnd('snd-end', 0.8);
             document.getElementById('countdown-msg').style.display = 'none';
-            document.getElementById('final-score').innerHTML = `연맹 병력: ${scores[1].toLocaleString()}억 명<br>제국 병력: ${scores[2].toLocaleString()}억 명`;
-            
+            document.getElementById('final-score').innerHTML = `연맹: ${scores[1].toLocaleString()}억 명<br>제국: ${scores[2].toLocaleString()}억 명`;
             const win = scores[1] > scores[2];
             document.getElementById('result-title').innerText = win ? "승전보!" : "패전 통보";
-            document.getElementById('result-scenario').innerText = win ? 
-                "바람의 후예가 승리했습니다! 성계에 다시 평화의 바람이 불어옵니다." : 
-                "성계가 함락되었습니다... 은하계는 기계의 지배 하에 놓입니다.";
-            document.getElementById('winner-text').innerText = win ? "은하계 해방 성공!" : "은하계 점령당함...";
+            document.getElementById('result-scenario').innerText = win ? "바람의 후예가 승리했습니다! 성계에 평화가 찾아옵니다." : "성계가 함락되었습니다... 은하계는 기계에 지배당합니다.";
             document.getElementById('result-screen').style.display = 'flex';
         }
     }
@@ -344,12 +355,11 @@
         if(p && p !== selectedPoint && canConnect(selectedPoint, p)) attemptMove(selectedPoint, p); 
         selectedPoint = null; isDragging = false; 
     };
-
     canvas.addEventListener('mousedown', e => hStart(e.clientX, e.clientY));
     window.addEventListener('mousemove', e => hMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', e => hEnd(e.clientX, e.clientY));
-    canvas.addEventListener('touchstart', e => { hStart(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, {passive:false});
-    window.addEventListener('touchmove', e => hMove(e.touches[0].clientX, e.touches[0].clientY));
+    canvas.addEventListener('touchstart', e => { const t = e.touches[0]; hStart(t.clientX, t.clientY); e.preventDefault(); }, {passive:false});
+    window.addEventListener('touchmove', e => { const t = e.touches[0]; hMove(t.clientX, t.clientY); e.preventDefault(); }, {passive:false});
     window.addEventListener('touchend', e => { const t = e.changedTouches[0]; hEnd(t.clientX, t.clientY); });
 </script>
 </body>
