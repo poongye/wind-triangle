@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v.0.1.9 - 제국의 공습</title>
+    <title>우주전쟁 v.0.1.10 - 복구된 전선</title>
     <style>
         body, html { 
             margin: 0; padding: 0; width: 100%; height: 100%; 
@@ -11,26 +11,24 @@
             font-family: 'Malgun Gothic', sans-serif; color: white; 
             -webkit-tap-highlight-color: transparent; touch-action: none; 
         }
-        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; }
         
         /* UI 레이아웃 */
         #fixed-ui { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
         .score-container { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-between; padding: 0 15px; box-sizing: border-box; }
-        .score-box { pointer-events: auto; font-size: 13px; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.85); border-radius: 8px; border: 1px solid #ffffff33; line-height: 1.5; min-width: 140px; }
+        .score-box { pointer-events: auto; font-size: 13px; font-weight: bold; padding: 10px; background: rgba(0,0,0,0.85); border-radius: 8px; border: 1px solid #ffffff33; line-height: 1.5; min-width: 130px; }
         #timer-display { position: absolute; top: 85px; left: 50%; transform: translateX(-50%); font-size: 32px; font-weight: bold; color: #ff3e3e; text-shadow: 0 0 10px #000; }
         #turn-msg { position: absolute; top: 135px; left: 50%; transform: translateX(-50%); font-size: 18px; font-weight: bold; color: #00ffcc; text-shadow: 0 0 10px #000; width: 100%; text-align: center; }
         
-        /* 버튼 및 오버레이 */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.95); pointer-events: auto; }
-        .rank-card { background: #0f0f1e; padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 90%; max-width: 380px; text-align: center; max-height: 85vh; overflow-y: auto; position: relative; }
+        /* 오버레이 & 팝업 */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.9); pointer-events: auto; }
+        .rank-card { background: #0f0f1e; padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 90%; max-width: 380px; text-align: center; max-height: 85vh; overflow-y: auto; }
         .start-btn { padding: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 0 15px #3498db; }
-        .sub-btn { background: rgba(255,255,255,0.1); border: 1px solid #00ffcc; color: #00ffcc; padding: 10px; border-radius: 10px; width: 100%; margin-bottom: 10px; cursor: pointer; font-size: 14px; }
+        .sub-btn { background: rgba(255,255,255,0.1); border: 1px solid #00ffcc; color: #00ffcc; padding: 10px; border-radius: 10px; width: 100%; margin-bottom: 15px; cursor: pointer; font-size: 14px; }
         
-        /* 게임 설명 팝업 */
-        #info-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 350px; background: #1a1a2e; border: 1px solid #00ffcc; border-radius: 15px; padding: 20px; z-index: 2000; box-shadow: 0 0 30px rgba(0,255,204,0.3); }
+        #info-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 350px; background: #1a1a2e; border: 1px solid #00ffcc; border-radius: 15px; padding: 20px; z-index: 2000; box-shadow: 0 0 30px rgba(0,255,204,0.3); pointer-events: auto; }
         .info-content { font-size: 13px; line-height: 1.7; color: #ddd; text-align: left; }
-        .info-close { margin-top: 15px; background: #00ffcc; color: #000; border: none; padding: 8px; width: 100%; border-radius: 5px; font-weight: bold; }
-
+        
         .total-users { margin-top: 20px; font-size: 11px; color: #3498db; opacity: 0.9; border-top: 1px solid rgba(52,152,219,0.3); padding-top: 10px; }
     </style>
 </head>
@@ -40,16 +38,16 @@
     <div id="rule-screen" class="overlay">
         <div class="rank-card">
             <h2 style="color:#00ffcc; margin-bottom:5px;">🌬️ 바람의 후예</h2>
-            <p style="font-size:11px; color:#aaa; margin-bottom:20px;">v.0.1.9 | Aggressive AI Update</p>
+            <p style="font-size:11px; color:#aaa; margin-bottom:20px;">v.0.1.10 | Battle Re-synchronized</p>
             
             <button class="sub-btn" onclick="toggleInfo(true)">📚 바람의 기록 (시나리오/설명)</button>
             
             <div style="text-align:left; padding:0 10px; font-size:13px; margin-bottom: 15px;">
                 <label>🤖 제국군 지능 레벨:</label> 
                 <select id="ai-diff" style="width:100%; padding:8px; background:#111; color:white; border:1px solid #3498db; border-radius:5px;">
-                    <option value="1800">쉬움 (정찰대)</option>
-                    <option value="1000" selected>보통 (정예함대)</option>
-                    <option value="500">어려움 (연산의 폭군)</option>
+                    <option value="1800">쉬움</option>
+                    <option value="1200" selected>보통 (점수 획득형)</option>
+                    <option value="600">어려움 (연산 폭군)</option>
                 </select>
                 <br><br>
                 <label>✨ 성계 규모: <span id="sv">25</span>개</label> 
@@ -57,24 +55,22 @@
             </div>
 
             <button class="start-btn" onclick="startWithSound()">성계 진입</button>
-            
-            <div class="total-users">성계에 투입된 총 풍예 수: <span id="total-count">258,114</span> 명</div>
+            <div class="total-users">성계에 투입된 총 풍예 수: <span id="total-count">261,402</span> 명</div>
         </div>
     </div>
 
     <div id="info-popup">
         <div class="info-content">
             <h3 style="color:#00ffcc; margin-top:0;">🌌 시나리오</h3>
-            <p>기계 제국 '렉스'는 은하계의 모든 성계를 기하학적 그리드로 재편하려 합니다. 당신은 '바람의 후예'가 되어, 별들을 먼저 연결해 생명의 영토를 확보해야 합니다.</p>
-            <hr style="border:0; border-top:1px solid #333;">
-            <h3 style="color:#00ffcc;">📜 대전제와 규칙</h3>
+            <p>기계 제국 '렉스'에 대항하여 바람의 후예들이 마지막 성단 '아이테르'를 지키고 있습니다.</p>
+            <h3 style="color:#00ffcc;">📜 대전제</h3>
             <ul>
-                <li><b>10초의 법칙:</b> 각 턴은 10초 내에 완료해야 합니다. 초과 시 패널티가 부여됩니다.</li>
-                <li><b>영토 점령:</b> 별과 별을 이어 삼각형을 만들면 해당 구역은 당신의 영토가 됩니다.</li>
-                <li><b>전략적 연결:</b> 이미 그어진 선을 가로질러 선을 그을 수 없습니다.</li>
+                <li>모든 행동은 10초 내에 이루어져야 함.</li>
+                <li>삼각형 점령 시 추가 턴 획득.</li>
+                <li>선은 서로 교차할 수 없음.</li>
             </ul>
         </div>
-        <button class="info-close" onclick="toggleInfo(false)">기록 닫기</button>
+        <button style="margin-top:15px; width:100%; padding:10px; background:#00ffcc; color:#000; border:none; border-radius:5px; font-weight:bold;" onclick="toggleInfo(false)">기록 닫기</button>
     </div>
 
     <div id="result-screen" class="overlay" style="display:none;">
@@ -91,91 +87,36 @@
             <div class="score-box" style="color:#e74c3c; border-color:#e74c3c; text-align:right;">제국 병력 : <span id="s2">0</span>억</div>
         </div>
         <div id="timer-display">10</div>
-        <div id="turn-msg">통신 연결 중...</div>
+        <div id="turn-msg">주파수 동기화 중...</div>
     </div>
 
     <audio id="bgm" loop preload="auto"><source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3" type="audio/mpeg"></audio>
-    <script>
-    /* 팝업 제어 */
-    function toggleInfo(show) {
-        document.getElementById('info-popup').style.display = show ? 'block' : 'none';
-    }
+    <audio id="snd-select" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-connect" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2568/2568-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-capture-player" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-capture-ai" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/2511/2511-preview.mp3" type="audio/mpeg"></audio>
+    <audio id="snd-end" preload="auto"><source src="https://assets.mixkit.co/active_storage/sfx/1433/1433-preview.mp3" type="audio/mpeg"></audio>
 
-    /* 게임 코어 변수 */
+<script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     let points=[], lines=[], triangles=[], selectedPoint=null, mousePos={x:0,y:0}, isDragging=false;
     let currentPlayer=1, scores={1:0, 2:0}, effects=[], isGameOver = false, timerInterval;
-    let gameStarted = false, aiLevel = 1000;
+    let gameStarted = false, aiLevel = 1200;
     let aiAnim = { active: false, startP: null, targetP: null, progress: 0 };
 
-    /* 🧠 수정된 공격형 AI 로직: 점수 획득 최우선 */
-    function aiThink() {
-        if(isGameOver || currentPlayer !== 2) return;
-        
-        let possibleMoves = [];
-        for(let i=0; i<points.length; i++) {
-            for(let j=i+1; j<points.length; j++) {
-                if(canConnect(points[i], points[j])) {
-                    let scoreWeight = 0;
-                    let triangleCount = 0;
-                    
-                    // 해당 연결로 완성될 수 있는 삼각형(점수) 전수 조사
-                    points.forEach(p3 => {
-                        if(p3 === points[i] || p3 === points[j]) return;
-                        const hasL1 = lines.some(l => (l.p1===points[i] && l.p2===p3) || (l.p1===p3 && l.p2===points[i]));
-                        const hasL2 = lines.some(l => (l.p1===points[j] && l.p2===p3) || (l.p1===p3 && l.p2===points[j]));
-                        
-                        if(hasL1 && hasL2) {
-                            // 삼각형 완성 가능! 높은 가중치 부여
-                            triangleCount++;
-                            let area = Math.abs((points[i].x*(points[j].y-p3.y) + points[j].x*(p3.y-points[i].y) + p3.x*(points[i].y-points[j].y)) / 2);
-                            scoreWeight += (area / 100) + 500; // 큰 삼각형일수록 더 좋아함
-                        }
-                    });
-
-                    // 전략적 가중치: 상대(플레이어)가 다음에 점수 내는 것을 방해하는 요소 추가
-                    let blockWeight = 0;
-                    if(triangleCount === 0) {
-                        // 내가 점수를 못 낸다면, 상대가 삼각형을 만들 수 있는 길목을 차단
-                        blockWeight = 10; 
-                    }
-
-                    possibleMoves.push({p1: points[i], p2: points[j], weight: scoreWeight + blockWeight});
-                }
-            }
-        }
-
-        if(possibleMoves.length > 0) {
-            // 가장 높은 점수를 내는 수를 선택 (동일 점수 시 랜덤)
-            possibleMoves.sort((a, b) => b.weight - a.weight);
-            let bestWeight = possibleMoves[0].weight;
-            let bestMoves = possibleMoves.filter(m => m.weight === bestWeight);
-            let choice = bestMoves[Math.floor(Math.random() * bestMoves.length)];
-            
-            aiAnim.startP = choice.p1; aiAnim.targetP = choice.p2; aiAnim.progress = 0; aiAnim.active = true;
-        } else nextTurn();
+    function playSnd(id, vol=0.5) {
+        const s = document.getElementById(id);
+        if(s) { s.currentTime = 0; s.volume = vol; s.play().catch(()=>{}); }
     }
 
-    /* 대전제: 10초 제한 로직 */
-    function startTimer() {
-        if(isGameOver) return;
-        clearInterval(timerInterval);
-        let turnTime = 10;
-        document.getElementById('timer-display').innerText = turnTime;
-        timerInterval = setInterval(() => {
-            turnTime--;
-            document.getElementById('timer-display').innerText = turnTime;
-            if(turnTime <= 0) {
-                // 시간 초과 시 대전제에 따른 패널티 및 강제 턴 종료
-                scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 30);
-                nextTurn();
-            }
-        }, 1000);
-    }
+    function toggleInfo(show) { document.getElementById('info-popup').style.display = show ? 'block' : 'none'; }
 
-    /* 게임 시작 및 기본 함수들 (v.0.1.8 기반) */
     function startWithSound() {
+        playSnd('bgm', 0.2);
+        ['snd-select', 'snd-connect', 'snd-capture-player', 'snd-capture-ai', 'snd-end'].forEach(id => {
+            const s = document.getElementById(id); s.play().then(()=> { s.pause(); s.currentTime=0; }).catch(()=>{});
+        });
         aiLevel = parseInt(document.getElementById('ai-diff').value);
         document.getElementById('rule-screen').style.display = 'none';
         startGame(parseInt(document.getElementById('star-count').value));
@@ -191,11 +132,77 @@
             do {
                 nx = 50 + Math.random() * (canvas.width - 100);
                 ny = 150 + Math.random() * (canvas.height - 250);
-                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 60);
+                ok = points.every(p => Math.hypot(p.x - nx, p.y - ny) > 65);
             } while(!ok);
             points.push({ x: nx, y: ny, isCore: false });
         }
         updateTurnMsg(); startTimer(); requestAnimationFrame(drawLoop);
+    }
+
+    function startTimer() {
+        if(isGameOver) return;
+        clearInterval(timerInterval);
+        let turnTime = 10;
+        document.getElementById('timer-display').innerText = turnTime;
+        timerInterval = setInterval(() => {
+            turnTime--;
+            document.getElementById('timer-display').innerText = turnTime;
+            if(turnTime <= 0) {
+                scores[currentPlayer] = Math.max(0, scores[currentPlayer] - 20);
+                nextTurn();
+            }
+        }, 1000);
+    }
+
+    function attemptMove(p1, p2) {
+        lines.push({p1, p2, player: currentPlayer});
+        playSnd('snd-connect', 0.6);
+        let captured = false;
+        points.forEach(p3 => {
+            if(p3 === p1 || p3 === p2) return;
+            const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
+            const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
+            if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
+                triangles.push({p1, p2, p3, player: currentPlayer});
+                
+                // 점수 계산 및 이펙트 추가
+                let areaScore = Math.floor(Math.abs((p1.x*(p2.y-p3.y) + p2.x*(p3.y-p1.y) + p3.x*(p1.y-p2.y)) / 150)) + 50;
+                scores[currentPlayer] += areaScore;
+                
+                // 이펙트 추가 (부활!)
+                let cx = (p1.x+p2.x+p3.x)/3, cy = (p1.y+p2.y+p3.y)/3;
+                effects.push({x: cx, y: cy, text: `+${areaScore}억`, color: currentPlayer==1?"#00ffcc":"#ff3e3e", size: 20, life: 60});
+                
+                playSnd(currentPlayer==1 ? 'snd-capture-player' : 'snd-capture-ai', 0.7);
+                captured = true;
+            }
+        });
+        updateUI();
+        if(!captured) nextTurn(); else { startTimer(); checkGameOver(); }
+    }
+
+    function aiThink() {
+        if(isGameOver || currentPlayer !== 2) return;
+        let possibleMoves = [];
+        for(let i=0; i<points.length; i++) {
+            for(let j=i+1; j<points.length; j++) {
+                if(canConnect(points[i], points[j])) {
+                    let weight = 0;
+                    points.forEach(p3 => {
+                        if(p3 === points[i] || p3 === points[j]) return;
+                        const hasL1 = lines.some(l => (l.p1===points[i] && l.p2===p3) || (l.p1===p3 && l.p2===points[i]));
+                        const hasL2 = lines.some(l => (l.p1===points[j] && l.p2===p3) || (l.p1===p3 && l.p2===points[j]));
+                        if(hasL1 && hasL2) weight += 1000; // 점수 획득 최우선
+                    });
+                    possibleMoves.push({p1: points[i], p2: points[j], weight});
+                }
+            }
+        }
+        if(possibleMoves.length > 0) {
+            possibleMoves.sort((a,b) => b.weight - a.weight);
+            let choice = possibleMoves[0];
+            aiAnim.startP = choice.p1; aiAnim.targetP = choice.p2; aiAnim.progress = 0; aiAnim.active = true;
+        } else nextTurn();
     }
 
     function canConnect(p1, p2) {
@@ -209,33 +216,17 @@
         return !lines.some(l => intersect(p1, p2, l.p1, l.p2));
     }
 
-    function attemptMove(p1, p2) {
-        lines.push({p1, p2, player: currentPlayer});
-        let captured = false;
-        points.forEach(p3 => {
-            if(p3 === p1 || p3 === p2) return;
-            const l1 = lines.find(l => (l.p1===p1 && l.p2===p3) || (l.p1===p3 && l.p2===p1));
-            const l2 = lines.find(l => (l.p1===p2 && l.p2===p3) || (l.p1===p3 && l.p2===p2));
-            if(l1 && l2 && !triangles.some(t => [t.p1,t.p2,t.p3].every(p => [p1,p2,p3].includes(p)))) {
-                triangles.push({p1, p2, p3, player: currentPlayer});
-                scores[currentPlayer] += 100; // 점수 획득
-                captured = true;
-            }
-        });
-        if(!captured) nextTurn(); else { startTimer(); updateUI(); checkGameOver(); }
-    }
-
     function nextTurn() {
         if(isGameOver) return;
         currentPlayer = currentPlayer === 1 ? 2 : 1;
-        updateTurnMsg(); startTimer(); updateUI();
+        updateTurnMsg(); startTimer();
         if(currentPlayer === 2) setTimeout(aiThink, aiLevel);
         checkGameOver();
     }
 
     function updateTurnMsg() {
         const m = document.getElementById('turn-msg');
-        m.innerText = currentPlayer === 1 ? "🌬️ 당신의 턴" : "🤖 제국군 연산 중...";
+        m.innerText = currentPlayer === 1 ? "🌬️ 당신의 턴" : "🤖 제국군 병력 전개 중...";
         m.style.color = currentPlayer === 1 ? "#00ffcc" : "#ff3e3e";
     }
 
@@ -249,7 +240,8 @@
         for(let i=0; i<points.length; i++) for(let j=i+1; j<points.length; j++) if(canConnect(points[i], points[j])) moves++;
         if(moves === 0 && gameStarted) {
             isGameOver = true; clearInterval(timerInterval);
-            document.getElementById('final-score').innerText = `최종 병력 - 연맹: ${scores[1]}억 / 제국: ${scores[2]}억`;
+            playSnd('snd-end', 0.8);
+            document.getElementById('final-score').innerText = `연맹: ${scores[1]}억 vs 제국: ${scores[2]}억`;
             document.getElementById('result-title').innerText = scores[1] > scores[2] ? "승리!" : "패배...";
             document.getElementById('result-screen').style.display = 'flex';
         }
@@ -262,23 +254,23 @@
         if(!gameStarted) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
-        // 삼각형 영토
+        // 영토 렌더링
         triangles.forEach(t => {
             ctx.beginPath(); ctx.moveTo(t.p1.x, t.p1.y); ctx.lineTo(t.p2.x, t.p2.y); ctx.lineTo(t.p3.x, t.p3.y); ctx.closePath();
-            ctx.fillStyle = t.player === 1 ? 'rgba(0, 255, 204, 0.3)' : 'rgba(255, 62, 62, 0.3)';
-            ctx.fill();
+            ctx.fillStyle = t.player === 1 ? 'rgba(0, 255, 204, 0.25)' : 'rgba(255, 62, 62, 0.25)';
+            ctx.fill(); ctx.strokeStyle = t.player === 1 ? '#00ffcc' : '#ff3e3e'; ctx.lineWidth = 1; ctx.stroke();
         });
 
-        // 선
+        // 선 렌더링
         lines.forEach(l => {
             ctx.beginPath(); ctx.moveTo(l.p1.x, l.p1.y); ctx.lineTo(l.p2.x, l.p2.y);
             ctx.strokeStyle = l.player === 1 ? '#00ffcc' : '#ff3e3e'; ctx.lineWidth = 2; ctx.stroke();
         });
 
-        // 드래그 중인 선
-        if(isDragging && selectedPoint) {
+        // 드래그 선
+        if(isDragging) {
             ctx.beginPath(); ctx.moveTo(selectedPoint.x, selectedPoint.y); ctx.lineTo(mousePos.x, mousePos.y);
-            ctx.strokeStyle = "white"; ctx.setLineDash([5, 5]); ctx.stroke(); ctx.setLineDash([]);
+            ctx.strokeStyle = "rgba(255,255,255,0.5)"; ctx.setLineDash([5,5]); ctx.stroke(); ctx.setLineDash([]);
         }
 
         // AI 애니메이션
@@ -291,33 +283,42 @@
             if(aiAnim.progress >= 1) { aiAnim.active = false; attemptMove(aiAnim.startP, aiAnim.targetP); }
         }
 
-        // 별
+        // 별 렌더링
         points.forEach(p => {
             ctx.font = "20px Arial"; ctx.textAlign = "center";
             ctx.fillText(p.isCore ? "☀️" : "✨", p.x, p.y+7);
         });
 
+        // 병력 충원 이펙트 (부활!)
+        for(let i = effects.length - 1; i >= 0; i--) {
+            let e = effects[i];
+            ctx.fillStyle = e.color; ctx.font = `bold ${e.size}px Arial`;
+            ctx.fillText(e.text, e.x, e.y);
+            e.y -= 0.5; e.life--;
+            if(e.life <= 0) effects.splice(i, 1);
+        }
+
         requestAnimationFrame(drawLoop);
     }
 
-    /* 터치 이벤트 (스크롤 방지 포함) */
     const hStart = (x, y) => {
         if(currentPlayer !== 1 || isGameOver || aiAnim.active) return;
-        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 30);
-        if(p) { selectedPoint = p; isDragging = true; mousePos = {x, y}; }
+        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 35);
+        if(p) { selectedPoint = p; isDragging = true; mousePos = {x, y}; playSnd('snd-select', 0.4); }
     };
+    const hMove = (x, y) => { if(isDragging) mousePos = {x, y}; };
     const hEnd = (x, y) => {
         if(!isDragging) return;
-        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 30);
+        const p = points.find(pt => Math.hypot(pt.x - x, pt.y - y) < 35);
         if(p && p !== selectedPoint && canConnect(selectedPoint, p)) attemptMove(selectedPoint, p);
         selectedPoint = null; isDragging = false;
     };
 
     canvas.addEventListener('mousedown', e => hStart(e.clientX, e.clientY));
-    window.addEventListener('mousemove', e => { if(isDragging) mousePos = {x: e.clientX, y: e.clientY}; });
+    window.addEventListener('mousemove', e => hMove(e.clientX, e.clientY));
     window.addEventListener('mouseup', e => hEnd(e.clientX, e.clientY));
     canvas.addEventListener('touchstart', e => { hStart(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, {passive:false});
-    window.addEventListener('touchmove', e => { if(isDragging) mousePos = {x: e.touches[0].clientX, y: e.touches[0].clientY}; e.preventDefault(); }, {passive:false});
+    window.addEventListener('touchmove', e => { hMove(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); }, {passive:false});
     window.addEventListener('touchend', e => { hEnd(e.changedTouches[0].clientX, e.changedTouches[0].clientY); });
 </script>
 </body>
