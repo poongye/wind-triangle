@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>우주전쟁 v.0.1.4</title>
+    <title>우주전쟁 v.0.1.5 - 최후의 성단</title>
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Malgun Gothic', sans-serif; color: white; -webkit-tap-highlight-color: transparent; }
         canvas { display: block; position: absolute; top: 0; left: 0; z-index: 10; touch-action: none; }
@@ -18,6 +18,7 @@
         .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; z-index: 1000; background: rgba(0,0,0,0.9); pointer-events: auto; }
         .rank-card { background: #0f0f1e; padding: 25px; border-radius: 20px; border: 2px solid #3498db; width: 90%; max-width: 380px; text-align: center; max-height: 90vh; overflow-y: auto; }
         .start-btn { padding: 15px; font-size: 18px; font-weight: bold; background: #3498db; color: #fff; border: none; border-radius: 12px; cursor: pointer; width: 100%; margin-top: 10px; box-shadow: 0 0 15px #3498db; }
+        .scenario-box { text-align: left; background: rgba(0, 255, 204, 0.05); padding: 15px; border-radius: 10px; font-size: 13px; line-height: 1.6; margin-bottom: 15px; color: #a0ffe0; border-left: 3px solid #00ffcc; }
         .how-to { text-align: left; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.6; margin: 15px 0; color: #ddd; border: 1px dashed #3498db; }
         select, input[type=range] { width: 100%; margin-top: 5px; background: #111; color: white; border: 1px solid #3498db; padding: 8px; border-radius: 5px; }
     </style>
@@ -34,15 +35,18 @@
     <div id="rule-screen" class="overlay">
         <div class="rank-card">
             <h2 style="color:#00ffcc; margin-bottom:5px;">🌬️ 바람의 후예</h2>
-            <p style="font-size:11px; color:#aaa;">v.0.1.4 | Strategic Space War</p>
+            <p style="font-size:11px; color:#aaa; margin-bottom:15px;">v.0.1.5 | 시나리오 통합 버전</p>
             
+            <div class="scenario-box">
+                <b>[긴급 타전]</b><br>
+                기계 제국 '렉스'가 아이테르 성계를 침공했습니다. 모든 통신이 끊기고 별들이 고립되었습니다. 전설의 수호자 '풍예'여, 지금 즉시 우주 항로를 다시 잇고 성계를 탈환하십시오!
+            </div>
+
             <div class="how-to">
-                <b>[게임 방법]</b><br>
-                1. 별과 별을 드래그하여 선을 연결하세요.<br>
-                2. 삼각형이 완성되면 해당 영토를 점령하고 병력을 얻습니다.<br>
-                3. <b>전략 점수:</b> 내 선이 많을수록 고득점! (100%/80%/50%)<br>
-                4. <b>제한 시간:</b> 10초 초과 시 병력 감점 및 턴 강제 종료.<br>
-                5. <b>크리티컬:</b> 10% 확률로 2배 점수 획득!
+                <b>[작전 지침]</b><br>
+                1. 별을 드래그하여 선을 연결하십시오.<br>
+                2. 삼각형 영토 점령 시 병력이 합류합니다.<br>
+                3. 10초 내에 움직이지 못하면 제국군에게 해킹당합니다.
             </div>
 
             <div style="text-align:left; padding:0 10px; font-size:13px;">
@@ -58,7 +62,8 @@
 
     <div id="result-screen" class="overlay" style="display:none;">
         <div class="rank-card">
-            <h1 style="color:#ff3e3e; margin-bottom:10px;">작전 종료</h1>
+            <h1 id="result-title" style="color:#ff3e3e; margin-bottom:10px;">작전 종료</h1>
+            <div id="result-scenario" class="scenario-box" style="margin-bottom:20px; font-size:14px; text-align:center;"></div>
             <h2 id="final-score" style="color:white; font-size: 15px; line-height: 1.8; margin-bottom:20px;"></h2>
             <h2 id="winner-text" style="color:#00ffcc; margin-bottom:20px;"></h2>
             <button class="start-btn" onclick="location.reload()">새로운 전선으로</button>
@@ -80,7 +85,7 @@
     </div>
 
 <script>
-    /* 스크립트 로직은 v.0.1.3과 100% 동일하게 유지됩니다 */
+    /* 로직 보존: 대전제와 규칙 기반 코딩 */
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const bgImg = new Image();
@@ -143,7 +148,7 @@
                 penaltyCount[currentPlayer]++;
                 let penaltyValue = penaltyCount[currentPlayer] * 50; 
                 scores[currentPlayer] = Math.max(0, scores[currentPlayer] - penaltyValue);
-                effects.push({x: canvas.width/2, y: 150, text: `⚠️ 시간 초과! -${penaltyValue}억`, color: "#ff3e3e", size: 22});
+                effects.push({x: canvas.width/2, y: 150, text: `⚠️ 해킹 발생! -${penaltyValue}억`, color: "#ff3e3e", size: 22});
                 playSnd('snd-capture-ai', 0.5);
                 updateUI();
                 clearInterval(timerInterval);
@@ -177,7 +182,7 @@
                 if(scores[currentPlayer === 1 ? 2 : 1] - scores[currentPlayer] > 500) finalTroop += 30;
                 scores[currentPlayer] += finalTroop;
                 let cx = (p1.x+p2.x+p3.x)/3, cy = (p1.y+p2.y+p3.y)/3;
-                if(isCritical) effects.push({x: cx, y: cy-25, text: "🔥 CRITICAL!!", color: "#f1c40f", size: 24});
+                if(isCritical) effects.push({x: cx, y: cy-25, text: "🌬️ 바람의 가호!!", color: "#f1c40f", size: 24});
                 effects.push({x: cx, y: cy, text: `+${finalTroop}억 (${Math.round(multiplier*100)}%)`, color: currentPlayer==1?"#2ecc71":"#e74c3c", size: 16});
                 playSnd(currentPlayer === 1 ? 'snd-capture-player' : 'snd-capture-ai', 0.7);
             }
@@ -266,7 +271,13 @@
             playSnd('snd-end', 0.8);
             document.getElementById('countdown-msg').style.display = 'none';
             document.getElementById('final-score').innerHTML = `연맹 병력: ${scores[1].toLocaleString()}억 명<br>제국 병력: ${scores[2].toLocaleString()}억 명`;
-            document.getElementById('winner-text').innerText = scores[1] > scores[2] ? "승리! 행성을 탈환했습니다!" : "패배... 성계가 함락되었습니다.";
+            
+            const win = scores[1] > scores[2];
+            document.getElementById('result-title').innerText = win ? "승전보!" : "패전 통보";
+            document.getElementById('result-scenario').innerText = win ? 
+                "바람의 후예가 승리했습니다! 성계에 다시 평화의 바람이 불어옵니다." : 
+                "성계가 함락되었습니다... 은하계는 기계의 지배 하에 놓입니다.";
+            document.getElementById('winner-text').innerText = win ? "은하계 해방 성공!" : "은하계 점령당함...";
             document.getElementById('result-screen').style.display = 'flex';
         }
     }
